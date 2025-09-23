@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin · PG Market</title>
+  <link rel="stylesheet" href="/static/css/index.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <script src="/static/js/fp.js"></script>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main class="container admin-layout">
+    <section class="panel">
+      <div class="panel-header"><h1>Admin Dashboard</h1></div>
+
+      <div class="col-left">
+        <section class="pane">
+          <h2 class="pane-title">Add user</h2>
+          <form id="form-create" class="card create">
+            <div class="f-grid">
+              <label class="f-item"><span class="lbl">Full name</span>
+                <input class="input" name="fullname" placeholder="Full name" required>
+              </label>
+              <label class="f-item"><span class="lbl">Email</span>
+                <input class="input" name="email" type="email" placeholder="email@example.com" required>
+              </label>
+              <label class="f-item"><span class="lbl">Password</span>
+                <input class="input" name="password" type="password" placeholder="Password (min 8)" minlength="8" required>
+              </label>
+              <label class="f-item chk"><input type="checkbox" name="is_admin"> Admin</label>
+              <button class="btn primary" type="submit">Add user</button>
+              <div id="create-msg" class="hint"></div>
+            </div>
+          </form>
+
+          <h2 class="pane-title">Users</h2>
+          <div class="toolbar">
+            <input id="filter-users" class="input" placeholder="Filter by name or email" autocomplete="off">
+          </div>
+          <div id="list" class="vstack gap scroll"></div>
+        </section>
+
+        <section class="pane">
+          <h2 class="pane-title">Add product</h2>
+          <form id="form-product-create" class="card create">
+            <div class="f-grid">
+              <label class="f-item"><span class="lbl">Name</span>
+                <input class="input" name="name" required>
+              </label>
+              <label class="f-item"><span class="lbl">Description</span>
+                <input class="input" name="description" placeholder="Optional">
+              </label>
+              <label class="f-item"><span class="lbl">Price (USD)</span>
+                <input class="input" name="price" type="number" min="0" step="0.01" placeholder="e.g. 19.99" required>
+              </label>
+              <label class="f-item"><span class="lbl">Image URL</span>
+                <input class="input" name="image_url" placeholder="https://...">
+              </label>
+              <label class="f-item"><span class="lbl">Stock</span>
+                <input class="input" name="stock" type="number" step="1" placeholder="leave blank for unlimited">
+              </label>
+              <button class="btn primary" type="submit">Add product</button>
+              <div id="p-create-msg" class="hint"></div>
+            </div>
+          </form>
+
+          <h2 class="pane-title">Products</h2>
+          <div class="toolbar">
+            <input id="filter-products" class="input" placeholder="Filter by name" autocomplete="off">
+          </div>
+          <div id="products-list" class="products-grid"></div>
+        </section>
+
+        <section class="pane">
+          <h2 class="pane-title">Add Course</h2>
+          <form id="form-c-create" class="card create">
+            <div class="f-grid">
+              <label class="f-item"><span class="lbl">Title</span>
+                <input class="input" name="title" required>
+              </label>
+              <label class="f-item"><span class="lbl">Description</span>
+                <textarea class="input" name="description" rows="3" placeholder="Optional"></textarea>
+              </label>
+              <label class="f-item"><span class="lbl">Image URL</span>
+                <input class="input" name="image_url" placeholder="https://...">
+              </label>
+              <button class="btn primary" type="submit">Add course</button>
+              <div id="c-create-msg" class="hint"></div>
+            </div>
+          </form>
+          <h2 class="pane-title">Courses</h2>
+          <div class="toolbar">
+            <input id="filter-courses" class="input" placeholder="Filter by name" autocomplete="off">
+          </div>
+          <div id="courses-list" class="products-grid"></div>
+        </section>
+      </div>
+
+      <div class="col-right">
+        <div id="detail" class="pane"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="modal-c-edit">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3>Edit course</h3>
+        <button class="btn ghost sm" data-close-modal>Close</button>
+      </div>
+      <form id="form-edit-course" class="modal-body">
+        <div class="f-grid">
+          <input type="hidden" name="id">
+          <label class="f-item"><span class="lbl">Title</span>
+            <input class="input" name="title" required>
+          </label>
+          <label class="f-item"><span class="lbl">Description</span>
+            <textarea class="input" name="description" rows="3" placeholder="Optional"></textarea>
+          </label>
+          <label class="f-item"><span class="lbl">Image URL</span>
+            <input class="input" name="image_url" placeholder="https://...">
+          </label>
+        </div>
+
+        <section class="pane" id="modules-list">
+          <div class="pane-head">
+            <h4 class="pane-title">Modules</h4>
+            <button type="button" class="btn sm" data-add-module>Add Module</button>
+          </div>
+        </section>
+        <p class="hint">Drag modules and videos to reorder them.</p>
+        <button class="btn primary" type="submit">Save changes</button>
+        <div class="hint mt-8" id="c-edit-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-p-edit">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3>Edit product</h3>
+        <button class="btn ghost sm" data-close-modal>Close</button>
+      </div>
+      <form id="form-edit-product" class="modal-body">
+        <div class="f-grid">
+          <input type="hidden" name="id">
+          <label class="f-item"><span class="lbl">Name</span>
+            <input class="input" name="name" required>
+          </label>
+          <label class="f-item"><span class="lbl">Description</span>
+            <textarea class="input" name="description" rows="3" placeholder="Optional"></textarea>
+          </label>
+          <label class="f-item"><span class="lbl">Price (USD)</span>
+            <input class="input" name="price" type="number" min="0" step="0.01" required>
+          </label>
+          <label class="f-item"><span class="lbl">Image URL</span>
+            <input class="input" name="image_url" placeholder="https://...">
+          </label>
+          <label class="f-item"><span class="lbl">Stock</span>
+            <input class="input" name="stock" type="number" step="1" placeholder="leave blank for unlimited">
+          </label>
+          <button class="btn primary" type="submit">Save changes</button>
+          <div id="p-edit-msg" class="hint mt-8"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="/static/js/admin.js"></script>
+  <script src="static/js/navbar.js"></script>
+  <script src="/static/js/lang.js"></script>
+
+</body>
+</html>

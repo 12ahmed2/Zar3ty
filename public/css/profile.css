@@ -1,0 +1,286 @@
+  /* Profile-specific only. Inherits tokens and base styles from index.css */
+
+  /* Layout */
+  .profile-wrap {
+    max-width: var(--container);
+    margin: 24px auto;
+    background: #f8fafc;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    padding: 32px 16px;
+  }
+
+  .profile-card,
+  .orders-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    padding: 24px 18px;
+  }
+
+  .profile-card {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .orders-card {
+    margin-top: var(--gap);
+  }
+
+  /* Headings */
+  .profile-card h2,
+  .orders-card h2 {
+    margin: 8px 0 14px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: .01em;
+  }
+
+  /* Readonly email look */
+  #pf-email[readonly] {
+    opacity: .7;
+    cursor: not-allowed;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 8px 10px;
+    border: 1px solid #e2e8f0;
+  }
+
+  #pf-msg {
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Orders list */
+  #orders-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--gap);
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  #orders-list .card {
+    padding: 14px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    transition: box-shadow 0.18s;
+  }
+
+  #orders-list .card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  }
+
+  #orders-msg {
+    color: var(--muted);
+    margin: 6px 0;
+  }
+
+  .order-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+
+  .order-meta {
+    color: var(--muted);
+    font-size: .92rem;
+  }
+
+  .order-items {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+  }
+
+  .order-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  /* Status badges using index.css palette */
+  .badge-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: #eef2f7;
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    letter-spacing: .02em;
+  }
+
+  .badge-created {
+    background: #e9f1ff;
+    border-color: #cfe0ff;
+    color: var(--brand);
+  }
+
+  .badge-paid {
+    background: #e7f6ee;
+    border-color: #c8edd8;
+    color: var(--ok);
+  }
+
+  .badge-processing {
+    background: #efeaff;
+    border-color: #e1d6ff;
+    color: #6b21a8;
+  }
+
+  .badge-shipped {
+    background: #e6f3ff;
+    border-color: #cfe7ff;
+    color: var(--brand-2);
+  }
+
+  /* Buttons inside orders */
+  .orders-card .btn.sm {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: .9rem;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
+    transition: background 0.18s, box-shadow 0.18s;
+  }
+
+  .orders-card .btn.sm:hover,
+  .enroll-card .btn:hover {
+    background: #1746a2;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  }
+
+  /* Container for enrollments */
+  #my-enrollments {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  /* Individual card */
+  .enroll-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+
+  .enroll-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.10);
+    border-color: #2563eb33;
+  }
+
+  /* Thumbnail */
+  .enroll-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 14px 14px 0 0;
+  }
+
+  /* Content */
+  .enroll-card .content {
+    padding: 0.75rem 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #f9fafb;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .enroll-card .title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .enroll-card .muted {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Actions row */
+  .enroll-card .actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  /* Buttons */
+  .enroll-card .btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    transition: background 0.18s, box-shadow 0.18s;
+  }
+
+  .enroll-card .btn.danger {
+    background: #e74c3c;
+    color: #fff;
+  }
+
+  .enroll-card .btn.danger:hover {
+    background: #c0392b;
+  }
+
+  .enroll-card .btn:not(.danger) {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .enroll-card .btn:not(.danger):hover {
+    background: #1746a2;
+  }
+
+  /* Empty state */
+  #my-enrollments .muted {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-style: italic;
+    color: #94a3b8;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 640px) {
+    .order-head,
+    .order-foot {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .profile-wrap,
+    .profile-card,
+    .orders-card {
+      padding: 12px 4px;
+    }
+  }

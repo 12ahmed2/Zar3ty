@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PG Market</title>
+  <link rel="stylesheet" href="/static/css/index.css" />
+</head>
+<body>
+  <!-- Navbar placeholder (rendered by /static/js/navbar.js) -->
+  <div id="navbar-placeholder" class="topbar"></div>
+
+  <main class="container" id="main">
+    <section>
+      <h1 class="section-title" data-translate="index.productsTitle"></h1>
+      <div id="grid-products" class="grid"></div>
+    </section>
+  </main>
+
+
+
+  <!-- Toast notifications -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- Scripts: fp first, navbar next, index last. All deferred to let HTML parse. -->
+  <script src="/static/js/lang.js"></script>
+  <script src="/static/js/fp.js" defer></script>
+  <script src="/static/js/navbar.js" defer></script>
+  <script src="/static/js/login_sign.js" defer></script>
+  <script src="/static/js/cart_drawer.js" defer></script>
+  <script src="/static/js/index.js" defer></script>
+</body>
+</html>

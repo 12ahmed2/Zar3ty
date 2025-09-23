@@ -1,0 +1,62 @@
+{
+  "navbar": {
+    "title": "Zar3ty",
+    "home": "Home",
+    "products": "Products",
+    "courses": "Courses",
+    "cart": "Cart",
+    "bot": "Smart Assistant",
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out"
+  },
+  "index": {
+    "productsTitle": "Products",
+    "cart": {
+      "yourCart": "Your cart",
+      "closeCart": "Close cart",
+      "total": "Total",
+      "checkout": "Checkout"
+    },
+    "toast": {
+      "addedToCart": "Added to cart",
+      "removedFromCart": "Removed from cart"
+    }
+  },
+  "courses": {
+    "header": "Our Courses",
+    "enroll": "Enroll in Course",
+    "unenroll": "Unenroll from Course",
+    "noCourses": "No courses available.",
+    "modules": "Modules"
+  },
+  "bot": {
+    "title": "Smart Assistant"
+  },
+  "gradients": {
+    "savechange": "Save changes",
+    "cancel": "Cancel",
+    "profile": "Profile",
+    "mycourses": "My Courses",
+    "myorders": "My Orders"
+  },
+  "auth": {
+    "login": {
+      "title": "Log in",
+      "email": "Email",
+      "password": "Password",
+      "button": "Log in",
+      "cancel": "Cancel",
+      "noAccount": "No account?",
+      "signUp": "Sign up"
+    },
+    "signup": {
+      "title": "Create Account",
+      "fullname": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "button": "Sign up",
+      "cancel": "Cancel"
+    }
+  }
+}

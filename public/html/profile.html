@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Profile · PG Market</title>
+  <link rel="stylesheet" href="/static/css/profile.css">
+  <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main class="container profile-wrap">
+    <!-- Profile Card -->
+    <section class="card profile-card">
+      <h2 data-translate="gradients.profile"></h2>
+      <form id="form-profile" class="vstack gap">
+        <label>
+          <label data-translate="auth.login.email"></label>
+          <input id="pf-email" type="email" readonly>
+        </label>
+        <label>
+          <label data-translate="auth.signup.fullname"></label>
+          <input id="pf-fullname" type="text" required maxlength="200">
+        </label>
+        <div class="hstack gap">
+          <button class="btn" type="submit" data-translate="gradients.savechange"></button>
+          <a class="btn ghost" href="/" data-translate="gradients.cancel"></a>
+        </div>
+        <p id="pf-msg" class="hint"></p>
+      </form>
+    </section>
+
+    <!-- Orders Card -->
+    <section class="card orders-card">
+        <h2 data-translate="gradients.myorders"></h2>
+        <p id="orders-msg" class="hint"></p>
+        <div id="orders-list" class="vstack gap"></div>
+      </section>
+
+      <section id="my-enrollments" class="card courses-grid">
+        <h2 data-translate="gradients.mycourses"></h2>
+      </section>
+  </main>
+
+  <script src="/static/js/lang.js"></script>
+  <script src="/static/js/fp.js"></script>
+  <script src="/static/js/profile.js" defer></script>
+  <script src="static/js/navbar.js"></script>
+  
+
+</body>
+</html>
+
