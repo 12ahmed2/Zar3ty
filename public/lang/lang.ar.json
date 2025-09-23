@@ -10,6 +10,10 @@
     "signup": "إنشاء حساب",
     "logout": "تسجيل الخروج"
   },
+  "products": {
+    "add": "إضافة إلى العربة",
+    "soldOut": "نفد المخزون"
+  },
   "index": {
     "productsTitle": "المنتجات",
     "cart": {

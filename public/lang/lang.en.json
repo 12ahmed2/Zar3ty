@@ -10,6 +10,10 @@
     "signup": "Sign up",
     "logout": "Log out"
   },
+    "products": {
+    "add": "add to cart",
+    "soldOut": "Sold Out"
+  },
   "index": {
     "productsTitle": "Products",
     "cart": {
