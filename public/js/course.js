@@ -113,16 +113,22 @@ async function setEnroll(courseId, enroll) {
     if (enroll) {
       await fetchJson(`/api/courses/${courseId}/enroll`, { method: 'POST' });
       COURSE.enrolled = true;
-      el.enrollBtn.textContent = 'Unenroll';
+      // ✅ language-ready
+      el.enrollBtn.dataset.translate = 'courses.unenroll';
+      el.enrollBtn.textContent = ''; // lang.js will fill
       el.enrollBtn.dataset.enrolled = 'true';
       el.enrollBtn.setAttribute('aria-pressed', 'true');
     } else {
       await fetchJson(`/api/courses/${courseId}/enroll`, { method: 'DELETE' });
       COURSE.enrolled = false;
-      el.enrollBtn.textContent = 'Enroll';
+      // ✅ language-ready
+      el.enrollBtn.dataset.translate = 'courses.enroll';
+      el.enrollBtn.textContent = '';
       el.enrollBtn.dataset.enrolled = 'false';
       el.enrollBtn.setAttribute('aria-pressed', 'false');
     }
+    // trigger lang.js to update immediately
+    if (window.applyTranslations) window.applyTranslations();
   } catch (err) {
     console.error('enroll error', err);
     alert(err.data?.error || 'Enroll action failed');
@@ -146,12 +152,15 @@ async function renderCourse(course) {
 
   if (el.enrollBtn) {
     el.enrollBtn.dataset.enrolled = course.enrolled ? 'true' : 'false';
-    el.enrollBtn.textContent = course.enrolled ? 'Unenroll' : 'Enroll';
+    // ✅ language-ready
+    el.enrollBtn.dataset.translate = course.enrolled ? 'courses.unenroll' : 'courses.enroll';
+    el.enrollBtn.textContent = ''; // lang.js will fill
     el.enrollBtn.setAttribute('aria-pressed', course.enrolled ? 'true' : 'false');
     el.enrollBtn.onclick = async () => {
       const enrolled = el.enrollBtn.dataset.enrolled === 'true';
       await setEnroll(course.id, !enrolled);
     };
+    if (window.applyTranslations) window.applyTranslations();
   }
 
   if (course.completed_at) showCompletedBadge();
@@ -221,9 +230,7 @@ async function renderCourse(course) {
         // If YT API loaded use it to detect ends and auto-mark watched.
         if (YT && YT.Player) {
           try {
-            // create a container div with an id so YT.Player can attach
             const container = document.createElement('div');
-            // create unique id
             const uniq = `yt-player-${mi}-${vi}-${Date.now()}`;
             container.id = uniq;
             playerWrap.appendChild(container);
@@ -246,7 +253,6 @@ async function renderCourse(course) {
             return;
           } catch (err) {
             console.warn('YT player failed, falling back to iframe', err);
-            // fall through to iframe fallback
           }
         }
 
@@ -262,7 +268,9 @@ async function renderCourse(course) {
         const manualBtn = document.createElement('button');
         manualBtn.className = 'btn sm mt-8';
         manualBtn.type = 'button';
-        manualBtn.textContent = 'Mark watched';
+        // ✅ language-ready for mark watched
+        manualBtn.dataset.translate = 'courses.markWatched';
+        manualBtn.textContent = '';
         manualBtn.addEventListener('click', async () => {
           await markWatched(course.id, mi, vi);
           mark.textContent = '✓';
@@ -270,10 +278,10 @@ async function renderCourse(course) {
           manualBtn.disabled = true;
         });
         playerWrap.appendChild(manualBtn);
+        if (window.applyTranslations) window.applyTranslations();
       });
     });
 
-    // collapse/expand module on title click
     const header = section.querySelector('.module-title');
     header.addEventListener('click', () => section.classList.toggle('active'));
   });

@@ -91,8 +91,8 @@ async function loadOrders() {
           <div class="row">
             <div><strong>Total: $${total}</strong></div>
             <div class="hstack gap">
-              ${canCancel ? `<button class="btn sm" data-cancel="${o.id}">Cancel</button>` : ''}
-              <button class="btn ghost sm" data-refresh="${o.id}">Refresh</button>
+              ${canCancel ? `<button class="btn sm" data-cancel="${o.id}" data-translate="gradients.cancel"></button>` : ''}
+              <button class="btn ghost sm" data-refresh="${o.id}" data-translate="gradients.refresh">Refresh</button>
             </div>
           </div>
         </article>`;
@@ -156,8 +156,8 @@ function renderMyEnrollments(list) {
         <div class="title">${item.title || 'Untitled'}</div>
         <div class="muted">Enrolled: ${new Date(item.enrolled_at).toLocaleString()}</div>
         <div class="actions">
-          <a class="btn" href="/course/${item.course_id}">Open</a>
-          <button class="btn danger unenroll-btn" data-course-id="${item.course_id}">Unenroll</button>
+          <a class="btn" href="/course/${item.course_id}" data-translate="gradients.open">Open</a>
+          <button class="btn danger unenroll-btn" data-course-id="${item.course_id}" data-translate="courses.unenroll">Unenroll</button>
         </div>
       </div>
     </div>

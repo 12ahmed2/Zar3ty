@@ -38,7 +38,9 @@
     "cancel":"إلغاء",
     "profile":"الملف الشخصي",
     "mycourses":"دوراتي",
-    "myorders":"طلباتي"
+    "myorders":"طلباتي",
+    "open":"فتح",
+    "refresh":"تحديث"
   },
   "auth": {
     "login": {

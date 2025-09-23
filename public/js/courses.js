@@ -1,3 +1,8 @@
+// =============================
+// courses.js
+// =============================
+
+// Fetch all courses
 async function fetchCourses() {
   try {
     const res = await fetch('/api/courses');
@@ -9,7 +14,7 @@ async function fetchCourses() {
   }
 }
 
-
+// Fetch my enrollments
 async function fetchMyEnrollments() {
   // returns [{ course_id, enrolled_at, ... }, ...] when logged in
   const res = await fetch('/api/me/enrollments', { credentials: 'include' });
@@ -17,10 +22,14 @@ async function fetchMyEnrollments() {
   return res.json();
 }
 
+// Render courses grid
 function renderCourses(list, enrolledSet = new Set()) {
   const grid = document.getElementById("courses-grid");
-  if (!list.length) { grid.innerHTML = `<div class="muted" >No courses available.</div>`; return; }
-  
+  if (!list.length) {
+    grid.innerHTML = `<div class="muted">No courses available.</div>`;
+    return;
+  }
+
   grid.innerHTML = list.map(c => {
     const enrolled = enrolledSet.has(Number(c.id));
     return `
@@ -30,15 +39,15 @@ function renderCourses(list, enrolledSet = new Set()) {
           <div class="course-title">${c.title}</div>
           <div class="course-desc">${c.description || ''}</div>
           <button class="btn enroll-btn"
-                  data-translate="courses.${enrolled ? 'unenroll' : 'enroll'}"
-                  data-course-id="${c.id}"
-                  data-enrolled="${enrolled}">
-            ${enrolled ? 'Unenroll' : 'Enroll'}
+            data-translate="courses.${enrolled ? 'unenroll' : 'enroll'}"
+            data-course-id="${c.id}"
+            data-enrolled="${enrolled}">
           </button>
         </div>
       </div>`;
   }).join('');
 
+  // Attach click handlers after rendering
   document.querySelectorAll(".enroll-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const button = e.currentTarget;
@@ -56,8 +65,18 @@ function renderCourses(list, enrolledSet = new Set()) {
         }
 
         // toggle UI state
-        button.dataset.enrolled = (!enrolled).toString();
-        button.textContent = enrolled ? 'Enroll' : 'Unenroll';
+        const newEnrolled = !enrolled;
+        button.dataset.enrolled = newEnrolled.toString();
+
+        // ✅ Instead of hardcoding textContent,
+        // update the data-translate attribute so lang.js updates text instantly
+        button.setAttribute(
+          'data-translate',
+          newEnrolled ? 'courses.unenroll' : 'courses.enroll'
+        );
+
+        // ⚠️ Do NOT set textContent manually;
+        // lang.js observer will update text automatically in current language
       } catch (err) {
         console.error('Enroll/unenroll failed', err);
         alert('Action failed. See console.');
@@ -66,10 +85,7 @@ function renderCourses(list, enrolledSet = new Set()) {
   });
 }
 
-
-
-
-
+// Initial load
 (async () => {
   try {
     const [courses, myEnrollments] = await Promise.all([
