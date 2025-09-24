@@ -3,6 +3,7 @@
 
 const FP_KEY = 'client_fp';
 const LS_GUEST = 'guest_cart_ls';
+let LANG = 'en'; // default language
 
 function getFP() {
   let v = localStorage.getItem(FP_KEY);
@@ -16,7 +17,7 @@ function getFP() {
 }
 
 async function api(path, { method = 'GET', json, headers = {}, credentials = 'include' } = {}, _retry = false) {
-  const opts = { method, credentials, headers: { 'x-client-fingerprint': getFP(), ...headers } };
+  const opts = { method, credentials, headers: { 'x-client-fingerprint': getFP(), ...headers, 'x-lang': LANG } };
   if (json !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(json); }
   const res = await fetch(path, opts);
   const text = await res.text().catch(() => null);
@@ -43,7 +44,7 @@ function refreshEls() {
     grid: document.querySelector('#grid-products'),
     cartDrawer: document.querySelector('#cart-drawer'),
     cartItems: document.querySelector('#cart-items'),
-    cartCount: document.querySelector('#cart-count'),
+    cartCount: document.querySelector('#cart-count'), // navbar injects this
     cartTotal: document.querySelector('#cart-total'),
     closeCart: document.querySelector('#btn-close-cart'),
     checkout: document.querySelector('#btn-checkout'),
@@ -55,6 +56,7 @@ function refreshEls() {
     signupErr: document.querySelector('#signup-error'),
     scrim: document.querySelector('#scrim'),
     toast: document.querySelector('#toast'),
+    langBtns: document.querySelectorAll('[data-lang]') // added language buttons
   };
 }
 refreshEls();
@@ -71,159 +73,354 @@ async function loadProducts() {
   productsById = new Map((productsCache || []).map(p => [Number(p.id), p]));
   refreshEls();
   if (!els.grid) return;
-
   els.grid.innerHTML = (productsCache || []).map(p => {
     const price = fmtMoney(p.price_cents);
     const stockNum = (p.stock === null || p.stock === undefined) ? null : Number(p.stock);
     const soldOut = stockNum !== null && stockNum <= 0;
-
-    // Use data-translate keys instead of hardcoded English
-    const stockTxt = stockNum === null
-      ? `<span class="muted">&nbsp;</span>`
-      : (soldOut
-        ? `<span class="error" data-translate="products.soldOut">Sold out</span>`
-        : `<span class="muted" data-translate="products.stock" data-stock="${stockNum}">Stock: ${stockNum}</span>`);
-
+    const stockTxt = stockNum === null ? `<span class="muted">&nbsp;</span>` : (soldOut ? `<span class="error">${translate('Sold out')}</span>` : `<span class="muted">${translate('Stock')}: ${stockNum}</span>`);
     return `
       <article class="card product">
         <img src="${p.image_url || '/static/img/placeholder.png'}" alt="">
-        <h4>${escapeHtml(p.name)}</h4>
-        <p class="muted">${escapeHtml(p.description || '')}</p>
+        <h4>${escapeHtml(translate(p.name))}</h4>
+        <p class="muted">${escapeHtml(translate(p.description || ''))}</p>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <div><strong>${price}</strong><br/>${stockTxt}</div>
-          <button class="btn sm" 
-            data-add="${p.id}" 
-            ${soldOut ? 'disabled' : ''}
-            data-translate="${soldOut ? 'products.soldOut' : 'products.add'}">
-            ${soldOut ? 'Sold out' : 'Add'}
-          </button>
+          <button class="btn sm" data-add="${p.id}" ${soldOut ? 'disabled' : ''}>${soldOut ? translate('Sold out') : translate('Add')}</button>
         </div>
       </article>`;
   }).join('');
-
-  // Ask lang.js to refresh translations after rendering:
-  if (typeof window.applyTranslations === 'function') {
-    window.applyTranslations();
-  }
-
-  attachAddListeners();
 }
 
-/* ADD TO CART listeners */
-function attachAddListeners() {
-  document.querySelectorAll("[data-add]").forEach(btn => {
-    btn.addEventListener("click", async e => {
-      const id = Number(e.currentTarget.dataset.add);
-      await addToCart(id, 1).catch(() => {});
-    });
-  });
-}
-
-/* CART FUNCTIONS */
-async function addToCart(id, qty) {
-  const product = productsById.get(Number(id));
-  if (!product) return;
-
+/* localStorage guest mirror */
+function lsGetGuest() {
   try {
-    await api('/api/cart', { method: 'POST', json: { product_id: id, quantity: qty } });
-  } catch {
-    // Save locally if guest
-    let ls = JSON.parse(localStorage.getItem(LS_GUEST) || '{}');
-    ls[id] = (ls[id] || 0) + qty;
-    localStorage.setItem(LS_GUEST, JSON.stringify(ls));
-  }
-  await updateCartBadge();
-  await renderCart();
+    const v = JSON.parse(localStorage.getItem(LS_GUEST) || '[]');
+    if (!Array.isArray(v)) return [];
+    return v.filter(x => x && Number.isInteger(+x.product_id) && Number.isInteger(+x.qty) && +x.qty > 0)
+      .map(x => ({ product_id: Number(x.product_id), qty: Number(x.qty) }));
+  } catch { return []; }
+}
+function lsSetGuest(items) { localStorage.setItem(LS_GUEST, JSON.stringify(items || [])); }
+function lsAddGuest(product_id, qty = 1) {
+  const items = lsGetGuest();
+  const i = items.findIndex(x => x.product_id === product_id);
+  if (i === -1) items.push({ product_id, qty });
+  else items[i].qty += qty;
+  lsSetGuest(items);
+}
+function lsRemoveGuest(product_id) {
+  lsSetGuest(lsGetGuest().filter(x => x.product_id !== product_id));
+}
+function buildGuestViewFromLS() {
+  const items = lsGetGuest();
+  return items.map(it => {
+    const p = productsById.get(it.product_id);
+    if (!p) return null;
+    return { id: -it.product_id, qty: it.qty, product_id: it.product_id, name: p.name, price_cents: p.price_cents, image_url: p.image_url, stock: p.stock };
+  }).filter(Boolean);
+}
+async function syncLSGuestToServer() {
+  const lsItems = lsGetGuest();
+  if (!lsItems.length) return;
+  try {
+    for (const it of lsItems) {
+      await api('/api/guest-cart/items', { method: 'POST', json: { product_id: it.product_id, qty: it.qty } });
+    }
+  } catch {}
 }
 
-async function updateCartBadge() {
-  const cart = await api('/api/cart').catch(() => null);
-  let count = 0;
-  if (cart && Array.isArray(cart.items)) count = cart.items.reduce((a, c) => a + c.quantity, 0);
-  els.cartCount.textContent = count;
+/* CART UI */
+function setCartOpenState(open) {
+  refreshEls();
+  const drawer = els.cartDrawer;
+  const scrim = els.scrim;
+  if (!drawer || !scrim) return;
+  if (open) {
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    scrim.removeAttribute('hidden');
+  } else {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    scrim.setAttribute('hidden', '');
+  }
+}
+function openCart() { setCartOpenState(true); }
+function closeCart() { setCartOpenState(false); }
+
+async function getCart() {
+  if (window.me) {
+    const serverItems = await api('/api/cart').catch(() => []);
+    return Array.isArray(serverItems) ? serverItems : [];
+  }
+  const guest = await api('/api/guest-cart').catch(() => null);
+  if (Array.isArray(guest) && guest.length) return guest;
+  return buildGuestViewFromLS();
+}
+
+async function addToCart(productId) {
+  if (window.me) {
+    await api('/api/cart/items', { method: 'POST', json: { product_id: productId, qty: 1 } });
+    await updateCartBadge();
+    return { ok: true };
+  }
+  lsAddGuest(productId, 1);
+  await api('/api/guest-cart/items', { method: 'POST', json: { product_id: productId, qty: 1 } }).catch(() => {});
+  await updateCartBadge();
+  return { ok: true };
+}
+
+async function removeFromCart(item) {
+  if (Number(item.id) > 0) {
+    await api(`/api/cart/items/${Number(item.id)}`, { method: 'DELETE' }).catch(async () => {
+      await api('/api/cart/items', { method: 'DELETE', json: { id: Number(item.id) } }).catch(() => { });
+    });
+    await updateCartBadge();
+    return { ok: true };
+  }
+  lsRemoveGuest(item.product_id);
+  await api(`/api/guest-cart/items/${item.product_id}`, { method: 'DELETE' }).catch(() => { });
+  await updateCartBadge();
+  return { ok: true };
 }
 
 async function renderCart() {
-  const cart = await api('/api/cart').catch(() => null);
-  if (!cart || !Array.isArray(cart.items)) return;
+  refreshEls();
+  const items = await getCart().catch(() => []);
+  const total = items.reduce((s, it) => s + Number(it.qty) * Number(it.price_cents), 0);
+  const count = items.reduce((s, it) => s + Number(it.qty), 0);
 
-  els.cartItems.innerHTML = cart.items.map(item => {
-    const p = productsById.get(item.product_id) || {};
-    const price = fmtMoney(p.price_cents);
-    return `
-      <li>
-        <span>${escapeHtml(p.name || '')}</span>
-        <span>${item.quantity} × ${price}</span>
-      </li>`;
-  }).join('');
-  els.cartTotal.textContent = fmtMoney(cart.total_cents || 0);
-}
+  if (els.cartCount) els.cartCount.textContent = count;
+  if (els.cartTotal) els.cartTotal.textContent = fmtMoney(total);
 
-/* LS guest sync */
-async function syncLSGuestToServer() {
-  const ls = JSON.parse(localStorage.getItem(LS_GUEST) || '{}');
-  const items = Object.entries(ls).map(([product_id, quantity]) => ({ product_id: Number(product_id), quantity }));
-  if (!items.length) return;
-
-  try {
-    await api('/api/cart/sync', { method: 'POST', json: { items } });
-    localStorage.removeItem(LS_GUEST);
-  } catch {
-    // leave LS intact if sync failed
+  if (els.cartItems) {
+    els.cartItems.innerHTML = items.map(it => {
+      const encoded = encodeURIComponent(JSON.stringify(it));
+      return `
+      <div class="cart-item" data-cart-id="${it.id ?? ''}">
+        <img src="${it.image_url || '/static/img/placeholder.png'}" alt="">
+        <div class="grow">
+          <div>${escapeHtml(translate(it.name))}</div>
+          <div class="muted">x${it.qty}</div>
+        </div>
+        <div>${fmtMoney(it.price_cents)}</div>
+        <button class="icon-btn" data-rm='${encoded}' aria-label="remove">✖</button>
+      </div>`;
+    }).join('');
   }
+
+  // update navbar badge if present
+  const navBadge = document.querySelector('#cart-count');
+  if (navBadge) navBadge.textContent = count;
 }
+
+async function updateCartBadge() {
+  refreshEls();
+  try {
+    if (window.me) {
+      const items = await api('/api/cart').catch(() => []);
+      if (Array.isArray(items)) {
+        const count = items.reduce((s, it) => s + Number(it.qty || 0), 0);
+        if (els.cartCount) els.cartCount.textContent = count;
+        const navBadge = document.querySelector('#cart-count');
+        if (navBadge) navBadge.textContent = count;
+        return;
+      }
+    } else {
+      const guest = await api('/api/guest-cart').catch(() => null);
+      if (Array.isArray(guest)) {
+        const count = guest.reduce((s, it) => s + Number(it.qty || 0), 0);
+        if (els.cartCount) els.cartCount.textContent = count;
+        const navBadge = document.querySelector('#cart-count');
+        if (navBadge) navBadge.textContent = count;
+        return;
+      }
+    }
+  } catch {}
+  const ls = lsGetGuest();
+  const count = ls.reduce((s, it) => s + Number(it.qty || 0), 0);
+  if (els.cartCount) els.cartCount.textContent = count;
+  const navBadge = document.querySelector('#cart-count');
+  if (navBadge) navBadge.textContent = count;
+}
+
+/* LANGUAGE HANDLER */
+function translate(text) {
+  if (LANG === 'ar') {
+    // simple static translation example (replace with actual API if needed)
+    const dict = { 'Add': 'إضافة', 'Sold out': 'نفذ المخزون', 'Stock': 'المخزون' };
+    return dict[text] || text;
+  }
+  return text;
+}
+
+function setLanguage(lang) {
+  LANG = lang === 'ar' ? 'ar' : 'en';
+  localStorage.setItem('lang', LANG);
+  refreshEls();
+  loadProducts().catch(() => {});
+  renderCart().catch(() => {});
+}
+
+/* expose functions for navbar */
+window.openCart = openCart;
+window.renderCart = renderCart;
+window.updateCartBadge = updateCartBadge;
+window.setLanguage = setLanguage;
+
+/* Delegated Events */
+document.addEventListener('click', async (e) => {
+  const addBtn = e.target.closest?.('[data-add]');
+  if (addBtn) {
+    const id = Number(addBtn.dataset.add);
+    try {
+      await addToCart(id);
+      await renderCart();
+      openCart();
+    } catch (err) {
+      if (err && err.status === 401) { toast('Please log in'); show(document.querySelector('#dlg-login')); return; }
+      toast(err?.data?.error || translate('Add failed'));
+    }
+    return;
+  }
+
+  // Language buttons
+  const langBtn = e.target.closest?.('[data-lang]');
+  if (langBtn) {
+    setLanguage(langBtn.dataset.lang);
+    return;
+  }
+
+  if (e.target.closest && e.target.closest('#btn-open-cart')) {
+    await renderCart();
+    openCart();
+    return;
+  }
+
+  const rm = e.target.closest?.('[data-rm]');
+  if (rm) {
+    const item = JSON.parse(decodeURIComponent(rm.dataset.rm));
+    try {
+      await removeFromCart(item);
+      await renderCart();
+    } catch (err) {
+      toast(err?.data?.error || translate('Remove failed'));
+    }
+    return;
+  }
+
+  if (e.target.closest && (e.target.closest('#btn-close-cart') || e.target.closest('#scrim'))) {
+    closeCart();
+    return;
+  }
+
+  if (e.target.closest && e.target.closest('#btn-checkout')) {
+    if (typeof window.me === 'undefined' || !window.me) { toast(translate('Log in to checkout')); show(document.querySelector('#dlg-login')); return; }
+    try {
+      const out = await api('/api/checkout', { method: 'POST' });
+      toast(`${translate('Order')} #${out.order_id} ${translate('placed')}`);
+      await renderCart();
+    } catch (err) {
+      toast(err?.data?.error || translate('Checkout failed'));
+    }
+    return;
+  }
+
+  // close dialog buttons (data-close)
+  const closeBtn = e.target.closest?.('[data-close]');
+  if (closeBtn) {
+    const dlg = closeBtn.closest('dialog');
+    if (dlg && typeof dlg.close === 'function') dlg.close();
+    return;
+  }
+});
+
+/* Keyboard: Escape closes dialogs and cart */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('dialog').forEach(d => { if (typeof d.close === 'function') d.close(); });
+    closeCart();
+  }
+});
+
+/* Modal helpers */
+function show(el) { el?.showModal?.(); }
+function hide(el) { el?.close?.(); }
+
+/* Modal switching */
+document.addEventListener('click', (e) => {
+  const openSignup = e.target.closest?.('[data-open-signup]');
+  if (openSignup) {
+    e.preventDefault();
+    hide(document.querySelector('#dlg-login'));
+    show(document.querySelector('#dlg-signup'));
+  }
+});
 
 /* Auth forms */
-if (els.loginForm) {
-  els.loginForm.addEventListener("submit", async e => {
+document.addEventListener('submit', async (e) => {
+  if (!e.target) return;
+
+  if (e.target.matches && e.target.matches('#form-login')) {
     e.preventDefault();
-    els.loginErr.textContent = '';
+    refreshEls();
+    const f = new FormData(e.target);
+    if (els.loginErr) els.loginErr.textContent = '';
     try {
-      const formData = new FormData(els.loginForm);
-      await api('/login', { method: 'POST', json: Object.fromEntries(formData) });
+      await api('/login', { method: 'POST', json: { email: f.get('email'), password: f.get('password') } });
+      hide(els.loginDlg);
+      await api('/api/cart/merge', { method: 'POST' }).catch(() => {});
+      lsSetGuest([]);
+      await renderCart();
+      toast(translate('Logged in'));
+      if (typeof window.refreshAuthUI === 'function') await window.refreshAuthUI().catch(() => {});
       location.reload();
     } catch (err) {
-      els.loginErr.textContent = err.data?.error || 'Login failed';
+      if (els.loginErr) els.loginErr.textContent = err?.data?.error || translate('Login failed');
     }
-  });
-}
+    return;
+  }
 
-if (els.signupForm) {
-  els.signupForm.addEventListener("submit", async e => {
+  if (e.target.matches && e.target.matches('#form-signup')) {
     e.preventDefault();
-    els.signupErr.textContent = '';
+    refreshEls();
+    const f = new FormData(e.target);
+    if (els.signupErr) els.signupErr.textContent = '';
     try {
-      const formData = new FormData(els.signupForm);
-      await api('/signup', { method: 'POST', json: Object.fromEntries(formData) });
+      await api('/signup', { method: 'POST', json: { fullname: f.get('fullname'), email: f.get('email'), password: f.get('password') } });
+      hide(els.signupDlg);
+      await api('/api/cart/merge', { method: 'POST' }).catch(() => {});
+      lsSetGuest([]);
+      await renderCart();
+      toast(translate('Account created'));
+      if (typeof window.refreshAuthUI === 'function') await window.refreshAuthUI().catch(() => {});
       location.reload();
     } catch (err) {
-      els.signupErr.textContent = err.data?.error || 'Signup failed';
+      if (els.signupErr) els.signupErr.textContent = err?.data?.error || translate('Signup failed');
     }
-  });
-}
+    return;
+  }
+});
 
-/* Cart drawer toggle */
-if (els.closeCart) {
-  els.closeCart.addEventListener("click", () => {
-    els.cartDrawer.classList.remove('open');
-    els.scrim.classList.remove('show');
-  });
-}
-
-if (els.cartDrawer) {
-  els.cartDrawer.addEventListener("click", e => {
-    if (e.target === els.cartDrawer) {
-      els.cartDrawer.classList.remove('open');
-      els.scrim.classList.remove('show');
-    }
-  });
+/* Toast */
+function toast(msg) {
+  refreshEls();
+  const el = els.toast;
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__toastTO);
+  window.__toastTO = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
 /* Boot */
 (async function boot() {
   if (typeof window.refreshAuthUI === 'function') {
-    try { await window.refreshAuthUI(); } catch {}
+    try { await window.refreshAuthUI(); } catch { }
   }
+  const storedLang = localStorage.getItem('lang');
+  if (storedLang) LANG = storedLang;
+
   refreshEls();
   await loadProducts().catch(() => {});
   await syncLSGuestToServer().catch(() => {});

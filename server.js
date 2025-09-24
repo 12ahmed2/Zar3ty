@@ -55,6 +55,7 @@ app.use(helmet({
       ],
       connectSrc: [
         "'self'",
+        "http://localhost:5000",
         "https://run.aicado.ai",
         "wss://run.aicado.ai",
         "https://*.aicado.ai",
