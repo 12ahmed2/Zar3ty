@@ -16,5 +16,5 @@ const pool = new Pool({
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
 });
-
+console.log("it is ok")
 export default pool;
