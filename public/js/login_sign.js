@@ -19,7 +19,7 @@
       </label>
 
       <button class="btn wide" type="submit" data-translate="auth.login.title">Log in</button>
-      <button class="btn ghost wide" type="button" data-close data-translate="auth.login.cancle">Cancel</button>
+      <button class="btn ghost wide" type="button" data-close data-translate="auth.login.cancel">Cancel</button>
 
       <p class="hint"> <label data-translate="auth.login.noAccount">No account?</label> <a href="#" data-open-signup data-translate="auth.signup.title">Sign up</a></p>
       <p id="login-error" class="error" role="alert" aria-live="assertive"></p>
