@@ -43,6 +43,7 @@ function renderCourses(list, enrolledSet = new Set()) {
             data-course-id="${c.id}"
             data-enrolled="${enrolled}">
           </button>
+          <button class="btn btn-secondary" data-course-id="${c.id}" data-translate="gradients.open"></button>
         </div>
       </div>`;
   }).join('');
@@ -83,6 +84,15 @@ function renderCourses(list, enrolledSet = new Set()) {
       }
     });
   });
+
+  document.querySelectorAll(".btn-secondary").forEach(el=> {
+    el.addEventListener("click", async (e) => {
+      const butt = e.currentTarget;
+      const courseId = butt.dataset.courseId;
+      window.location.href = `/course/${courseId}`;
+    });
+  });
+
 }
 
 // Initial load
