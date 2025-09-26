@@ -16,6 +16,8 @@
   },
   "index": {
     "productsTitle": "المنتجات",
+    "stock": "المخزون", 
+    "price": "السعر",
     "cart": {
       "yourCart": "عربة التسوق الخاصة بك",
       "closeCart": "إغلاق العربة",

@@ -16,6 +16,8 @@
   },
   "index": {
     "productsTitle": "Products",
+    "stock": "Stock",
+    "price": "Price", 
     "cart": {
       "yourCart": "Your cart",
       "closeCart": "Close cart",

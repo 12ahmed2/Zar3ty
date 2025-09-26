@@ -77,7 +77,7 @@ async function loadProducts() {
     const price = fmtMoney(p.price_cents);
     const stockNum = (p.stock === null || p.stock === undefined) ? null : Number(p.stock);
     const soldOut = stockNum !== null && stockNum <= 0;
-    const stockTxt = stockNum === null ? `<span class="muted">&nbsp;</span>` : (soldOut ? `<span class="error">${translate('Sold out')}</span>` : `<span class="muted">${translate('Stock')}: ${stockNum}</span>`);
+    const stockTxt = stockNum === null ? `<span class="muted">&nbsp;</span>` : (soldOut ? `<span class="error" data-translate="products.soldOut"></span>` : `<span class="muted"><label data-translate="index.stock"></label>: ${stockNum}</span>`);
     return `
       <article class="card product">
         <img src="${p.image_url || '/static/img/placeholder.png'}" alt="">
@@ -85,7 +85,7 @@ async function loadProducts() {
         <p class="muted">${escapeHtml(translate(p.description || ''))}</p>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <div><strong>${price}</strong><br/>${stockTxt}</div>
-          <button class="btn sm" data-add="${p.id}" ${soldOut ? 'disabled' : ''}>${soldOut ? translate('Sold out') : translate('Add')}</button>
+          <button class="btn sm" data-add="${p.id}" ${soldOut ? 'disabled' : ''} data-translate="${soldOut ? 'products.soldOut' : 'products.add'}"></button>
         </div>
       </article>`;
   }).join('');
