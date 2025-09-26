@@ -287,6 +287,42 @@ async function renderCourse(course) {
   });
 }
 
+async function renderCourseInfo(course) {
+  COURSE = course;
+  el.title.textContent = course.title || 'Untitled course';
+  el.desc.textContent = course.description || '';
+  el.img.src = course.image_url || '/static/img/placeholder-course.png';
+
+  if (el.enrollBtn) {
+    el.enrollBtn.dataset.enrolled = course.enrolled ? 'true' : 'false';
+    // ✅ language-ready
+    el.enrollBtn.dataset.translate = course.enrolled ? 'courses.unenroll' : 'courses.enroll';
+    el.enrollBtn.textContent = ''; // lang.js will fill
+    el.enrollBtn.setAttribute('aria-pressed', course.enrolled ? 'true' : 'false');
+    el.enrollBtn.onclick = async () => {
+      const enrolled = el.enrollBtn.dataset.enrolled === 'true';
+      await setEnroll(course.id, !enrolled);
+      if (!enrolled) {
+        // just enrolled, reload to show full content
+        location.reload();
+      }
+    };
+    if (window.applyTranslations) window.applyTranslations();
+  }
+
+  if (course.completed_at) showCompletedBadge();
+
+  clearNode(el.modulesList);
+  const info = document.createElement('div');
+  info.className = 'course-info';
+  info.innerHTML = `
+    <p class="muted">You must enroll to access the course content.</p>
+    <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>
+    <p>After enrolling, you can track your progress as you complete the videos.</p>
+  `;
+  el.modulesList.appendChild(info);
+}
+
 /* bootstrap */
 async function isLoggedIn() {
   try {
@@ -316,8 +352,8 @@ async function isLoggedIn() {
         console.warn('Could not load enrollments fallback', e);
       }
     }
-
-    await renderCourse(course);
+    if (me && course.enrolled) await renderCourse(course);
+    else await renderCourseInfo(course);
   } catch (err) {
     console.error('Failed loading course', err);
     const root = document.getElementById('course-page') || document.body;
