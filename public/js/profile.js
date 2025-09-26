@@ -36,6 +36,8 @@ const els = {
   logout:     document.getElementById('btn-logout'),
   ordersList: document.getElementById('orders-list'),
   ordersMsg:  document.getElementById('orders-msg'),
+  profileForm: document.getElementById('form-profile')
+
 };
 
 /* ------------------------ Admin nav helper ------------------------ */
@@ -117,7 +119,8 @@ els.ordersList?.addEventListener('click', async (e) => {
   }
 });
 
-els.save?.addEventListener('click', async () => {
+els.profileForm?.addEventListener('submit', async (e) => {
+  e.preventDefault()
   els.msg && (els.msg.textContent = '');
   try {
     await api('/api/me', { method: 'PUT', json: { fullname: els.fullname?.value || '' } });
