@@ -305,6 +305,7 @@ function openCourseModal(c) {
   form.elements.title.value = c.title || '';
   form.elements.description.value = c.description || '';
   form.elements.image_url.value = c.image_url || '';
+  form.elements.completed.checked = c.completed_course || false;
 
   const modules = Array.isArray(c.modules) ? c.modules : [];
   if (els.modulesList) {
@@ -388,6 +389,7 @@ els.cEditForm?.addEventListener('submit', async (e) => {
     description: form.elements.description.value || null,
     image_url: form.elements.image_url.value || null,
     modules: modules,
+    completed_course: form.elements.completed.checked ? true : false
   };
 
   try {

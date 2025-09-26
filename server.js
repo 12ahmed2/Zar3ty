@@ -935,14 +935,17 @@ app.post('/api/admin/courses',requireAuth, requireAdmin, async (req, res) => {
 app.put('/api/admin/courses/:id', requireAuth, requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const { title, description, image_url, modules } = req.body;
+
+  const completed_course = !!(req.body.completed_course === true || req.body.completed_course === 'true');
+
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
   try {
     const { rowCount } = await pool.query(
       `UPDATE courses
-       SET title=$1, description=$2, image_url=$3, modules=$4
-       WHERE id=$5`,
-      [title, description, image_url, JSON.stringify(modules || []), id]
+       SET title=$1, description=$2, image_url=$3, modules=$4, completed_course=$5
+       WHERE id=$6`,
+      [title, description, image_url, JSON.stringify(modules || []), completed_course, id]
     );
     if (!rowCount) return res.status(404).json({ error: 'Course not found' });
     return res.status(200).json({ message: 'Course updated' });
