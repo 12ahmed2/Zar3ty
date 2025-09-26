@@ -905,7 +905,7 @@ app.get('/api/courses', async (_req, res) => {
 app.get('/api/admin/courses',requireAuth, requireAdmin, async (_req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, title, description, image_url, modules, created_at, updated_at
+      `SELECT id, title, description, image_url, modules, created_at, updated_at,completed_course
        FROM courses
        ORDER BY created_at DESC`
     );
