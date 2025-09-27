@@ -1,31 +1,32 @@
 import subprocess
 import sys
 
-try:
-    import asyncio
-    from googletrans import Translator
-except ImportError:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "asyncio"])
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "googletrans"])
-        import asyncio
-        from googletrans import Translator
+def install_and_import(package, import_name=None):
+    """
+    Install and import a package if not already available.
+    - package: the name used in pip install
+    - import_name: the name used in import (if different from package)
+    """
+    import_name = import_name or package
+    try:
+        globals()[import_name] = __import__(import_name)
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        globals()[import_name] = __import__(import_name)
 
+# Handle imports safely
+install_and_import("asyncio")   # stdlib, will never install
+install_and_import("googletrans")
+install_and_import("flask")
+install_and_import("flask_cors", "flask_cors")
 
-#
-# translator = Translator()
-
-# async def translate_text(text,src,dest):
-#    async with Translator() as translator:
-#        result = await translator.translate(text, src=src, dest=dest)
-#        return result
-#
-
-
-# translator = Translator()
-# translator.translate("hello",src="en",dest="ar")
-
+import asyncio
+from googletrans import Translator
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -42,4 +43,4 @@ async def translate_text():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5000)
