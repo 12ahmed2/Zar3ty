@@ -65,9 +65,9 @@
 #enroll-btn {
   padding: 10px 16px;
   border-radius: var(--radius);
-  border: none;
-  background: linear-gradient(180deg, var(--brand-2), var(--brand));
-  color: #fff;
+  color: var(--brand-2);
+  border: 2px solid var(--brand-2);
+  background: #fff;
   cursor: pointer;
   font-weight: 700;
   transition: background 0.2s, color 0.2s, transform 0.2s;
@@ -76,16 +76,12 @@
   box-shadow: 0 2px 8px rgba(29,78,216,.13);
 }
 #enroll-btn:hover {
-  filter: brightness(1.07);
-  background: linear-gradient(180deg, #1e40af 60%, #1d4ed8 100%);
-  box-shadow: 0 6px 24px rgba(29,78,216,.18);
+  background: var(--brand-2);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.15);
 }
-#enroll-btn[data-enrolled="true"] {
-  background: #fff;
-  color: var(--brand-2);
-  border: 2px solid var(--brand-2);
-  font-weight: 700;
-}
+
 
 /* --- Modules --- */
 #course-modules {

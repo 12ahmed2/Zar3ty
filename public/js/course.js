@@ -452,6 +452,11 @@ async function isLoggedIn() {
       // Setup enroll button click
       el.enrollBtn.onclick = async () => {
   try {
+      if (!await isLoggedIn()) {
+      alert("You need to log in first to enroll in a course.");
+      window.location.href = "/login"; // redirect to login page
+      return;
+    }
     // Use the local course object, not COURSE (may be null)
     await setEnroll(course.id, !course.enrolled);
 
