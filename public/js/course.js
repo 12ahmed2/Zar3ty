@@ -102,12 +102,8 @@ async function downloadCertificate(me,courseId) {
 
 
 async function showCertificateButton(courseId) {
-  // prevent duplicates
-  if (document.querySelector(".certificate-btn")) return;
-  
-  const certBtn = document.createElement("button");
-  certBtn.textContent = "🎓 Download Certificate";
-  certBtn.className = "certificate-btn";
+  const certBtn = document.getElementById("certificate-btn");
+  certBtn.style.display = 'inline-block';
 
   const me = await api('/api/me').catch(() => null);
 
