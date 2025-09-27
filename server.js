@@ -28,81 +28,84 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "blob:",
-        "https://cdn.jsdelivr.net",
-        "https://run.aicado.ai",
-        "https://*.aicado.ai",
-        "https://www.youtube.com",
-        "https://s.ytimg.com",
-        "https://www.youtube-nocookie.com"
-      ],
-      scriptSrcElem: [
-        "'self'",
-        "blob:",
-        "https://cdn.jsdelivr.net",
-        "https://run.aicado.ai",
-        "https://*.aicado.ai",
-        "https://www.youtube.com",
-        "https://s.ytimg.com",
-        "https://www.youtube-nocookie.com"
-      ],
-      connectSrc: [
-        "'self'",
-        "http://localhost:5000",
-        "https://run.aicado.ai",
-        "wss://run.aicado.ai",
-        "https://*.aicado.ai",
-        "https://www.youtube.com",
-        "https://s.ytimg.com"
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "blob:",
-        "https://*.ytimg.com",
-        "https://*.youtube.com",
-        "https://upload.wikimedia.org",
-        "https:"
-      ],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      workerSrc: ["'self'", "blob:", "https://run.aicado.ai"],
-      childSrc: [
-        "'self'",
-        "blob:",
-        "https://www.youtube.com",
-        "https://www.youtube-nocookie.com",
-        "https://run.aicado.ai",
-        "https://*.aicado.ai"
-      ],
-      frameSrc: [
-        "'self'",
-        "https://www.youtube.com",
-        "https://www.youtube-nocookie.com",
-        "https://run.aicado.ai",
-        "https://*.aicado.ai"
-      ],
-      mediaSrc: [
-        "'self'",
-        "blob:",
-        "https://run.aicado.ai",
-        "https://*.aicado.ai",
-        "https://www.youtube.com",
-        "https://www.youtube-nocookie.com"
-      ],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"]
-    }
-  },
-  frameguard: false
-}));
-
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "blob:",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",   // ✅ allow cdnjs
+          "https://run.aicado.ai",
+          "https://*.aicado.ai",
+          "https://www.youtube.com",
+          "https://s.ytimg.com",
+          "https://www.youtube-nocookie.com"
+        ],
+        scriptSrcElem: [
+          "'self'",
+          "blob:",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",   // ✅ allow cdnjs
+          "https://run.aicado.ai",
+          "https://*.aicado.ai",
+          "https://www.youtube.com",
+          "https://s.ytimg.com",
+          "https://www.youtube-nocookie.com"
+        ],
+        connectSrc: [
+          "'self'",
+          "http://localhost:5000",
+          "https://run.aicado.ai",
+          "wss://run.aicado.ai",
+          "https://*.aicado.ai",
+          "https://www.youtube.com",
+          "https://s.ytimg.com"
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://*.ytimg.com",
+          "https://*.youtube.com",
+          "https://upload.wikimedia.org",
+          "https:"
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        workerSrc: ["'self'", "blob:", "https://run.aicado.ai"],
+        childSrc: [
+          "'self'",
+          "blob:",
+          "https://www.youtube.com",
+          "https://www.youtube-nocookie.com",
+          "https://run.aicado.ai",
+          "https://*.aicado.ai"
+        ],
+        frameSrc: [
+          "'self'",
+          "https://www.youtube.com",
+          "https://www.youtube-nocookie.com",
+          "https://run.aicado.ai",
+          "https://*.aicado.ai"
+        ],
+        mediaSrc: [
+          "'self'",
+          "blob:",
+          "https://run.aicado.ai",
+          "https://*.aicado.ai",
+          "https://www.youtube.com",
+          "https://www.youtube-nocookie.com"
+        ],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"]
+      }
+    },
+    frameguard: false
+  })
+);
 
 /* ----------------------------- Static ----------------------------- */
 const PUBLIC = path.join(__dirname, 'public');

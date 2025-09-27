@@ -25,6 +25,83 @@ function courseIdFromPath() {
   return Number(parts[parts.length-1]);
 }
 
+
+async function downloadCertificate(courseId) {
+  try {
+    // Load user and course
+    const user = await fetchJson('/api/me');
+    const course = await fetchJson(`/api/courses/${courseId}`);
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4"
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Light green background (farm-friendly)
+    doc.setFillColor(240, 248, 240); 
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+    // Dark green border
+    doc.setDrawColor(34, 139, 34); 
+    doc.setLineWidth(5);
+    doc.rect(20, 20, pageWidth-40, pageHeight-40);
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(32);
+    doc.setTextColor(34, 139, 34);
+    doc.text("Certificate of Completion", pageWidth/2, 120, { align: "center" });
+
+    // Subtitle
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(18);
+    doc.setTextColor(60, 60, 60);
+    doc.text("This certifies that", pageWidth/2, 180, { align: "center" });
+
+    // Farmer’s name
+    doc.setFont("times", "bolditalic");
+    doc.setFontSize(28);
+    doc.setTextColor(0, 0, 0);
+    doc.text(user.name || "Participant", pageWidth/2, 230, { align: "center" });
+
+    // Course info
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(18);
+    doc.text("has successfully completed the training course:", pageWidth/2, 280, { align: "center" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(34, 139, 34);
+    doc.text(course.title || "Farming Course", pageWidth/2, 320, { align: "center" });
+
+    // Date
+    const today = new Date().toLocaleDateString();
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(14);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Date: ${today}`, pageWidth/2, 370, { align: "center" });
+
+    // Footer (organization)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(34, 139, 34);
+    doc.text("Temple of Trades Academy", pageWidth/2, 420, { align: "center" });
+
+    // Save
+    doc.save(`${user.name || "user"}_${course.title || "course"}_certificate.pdf`);
+
+  } catch (err) {
+    console.error("Error generating certificate:", err);
+    alert("Failed to generate certificate.");
+  }
+}
+
+
 function showCertificateButton(courseId) {
   // prevent duplicates
   if (document.querySelector(".certificate-btn")) return;
@@ -32,7 +109,7 @@ function showCertificateButton(courseId) {
   const certBtn = document.createElement("button");
   certBtn.textContent = "🎓 Download Certificate";
   certBtn.className = "certificate-btn";
-  // certBtn.onclick = () => downloadCertificate(courseId);
+  certBtn.onclick = () => downloadCertificate(courseId);
 
   // append under course title (or change target as you like)
   const container = document.getElementById("course-header") || document.body;
