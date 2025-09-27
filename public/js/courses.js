@@ -5,14 +5,18 @@
 
 import {detectLanguage,translate} from './translate.js';
 
+
+const LANG = localStorage.getItem('lang') || 'en';
+
+
 // Fetch all courses
 async function fetchCourses() {
   try {
     const res = await fetch('/api/courses');
-    if (!res.ok) throw new Error('Failed to fetch courses');
+    if (!res.ok) throw new Error(detectLanguage('Failed to fetch courses') === LANG? 'Failed to fetch courses': await translate('Failed to fetch courses', detectLanguage('Failed to fetch courses'), LANG));
     return await res.json();
   } catch (err) {
-    console.error('Error loading courses:', err);
+    console.error(detectLanguage('Error loading courses:') === LANG? 'Error loading courses:': await translate('Error loading courses:', detectLanguage('Error loading courses:'), LANG), err);
     return [];
   }
 }
@@ -26,21 +30,26 @@ async function fetchMyEnrollments() {
 }
 
 // Render courses grid
-function renderCourses(list, enrolledSet = new Set()) {
+async function renderCourses(list, enrolledSet = new Set()) {
   const grid = document.getElementById("courses-grid");
   if (!list.length) {
-    grid.innerHTML = `<div class="muted">No courses available.</div>`;
+    grid.innerHTML = `<div class="muted" data-translate="courses.noCourses"></div>`;
     return;
   }
 
-  grid.innerHTML = list.map(c => {
+  const htmlList = await Promise.all(list.map(async c => {
     const enrolled = enrolledSet.has(Number(c.id));
+
+    // Translate asynchronously
+    const title = detectLanguage(c.title) === LANG ? c.title : await translate(c.title, detectLanguage(c.title), LANG);
+    const description = detectLanguage(c.description || '') === LANG ? c.description : await translate(c.description, detectLanguage(c.description), LANG);
+
     return `
       <div class="course-card">
-        <img src="${c.image_url || 'https://via.placeholder.com/600x400'}" alt="${c.title}">
+        <img src="${c.image_url || 'https://via.placeholder.com/600x400'}" alt="${title}">
         <div class="course-content">
-          <div class="course-title">${c.title}</div>
-          <div class="course-desc">${c.description || ''}</div>
+          <div class="course-title">${title}</div>
+          <div class="course-desc">${description || ''}</div>
           <button class="btn enroll-btn"
             data-translate="courses.${enrolled ? 'unenroll' : 'enroll'}"
             data-course-id="${c.id}"
@@ -49,7 +58,9 @@ function renderCourses(list, enrolledSet = new Set()) {
           <button class="btn btn-secondary" data-course-id="${c.id}" data-translate="gradients.open"></button>
         </div>
       </div>`;
-  }).join('');
+  }));
+  grid.innerHTML = htmlList.join('');
+
 
   // Attach click handlers after rendering
   document.querySelectorAll(".enroll-btn").forEach(btn => {
