@@ -26,10 +26,9 @@ function courseIdFromPath() {
 }
 
 
-async function downloadCertificate(courseId) {
+async function downloadCertificate(me,courseId) {
   try {
     // Load user and course
-    const user = await fetchJson('/api/me');
     const course = await fetchJson(`/api/courses/${courseId}`);
     const { jsPDF } = window.jspdf;
 
@@ -67,7 +66,7 @@ async function downloadCertificate(courseId) {
     doc.setFont("times", "bolditalic");
     doc.setFontSize(28);
     doc.setTextColor(0, 0, 0);
-    doc.text(user.name || "Participant", pageWidth/2, 230, { align: "center" });
+    doc.text(me.fullname , pageWidth/2, 230, { align: "center" });
 
     // Course info
     doc.setFont("helvetica", "normal");
@@ -93,7 +92,7 @@ async function downloadCertificate(courseId) {
     doc.text("Temple of Trades Academy", pageWidth/2, 420, { align: "center" });
 
     // Save
-    doc.save(`${user.name || "user"}_${course.title || "course"}_certificate.pdf`);
+    doc.save(`${me.fullname|| "user"}_${course.title || "course"}_certificate.pdf`);
 
   } catch (err) {
     console.error("Error generating certificate:", err);
@@ -102,14 +101,17 @@ async function downloadCertificate(courseId) {
 }
 
 
-function showCertificateButton(courseId) {
+async function showCertificateButton(courseId) {
   // prevent duplicates
   if (document.querySelector(".certificate-btn")) return;
-
+  
   const certBtn = document.createElement("button");
   certBtn.textContent = "🎓 Download Certificate";
   certBtn.className = "certificate-btn";
-  certBtn.onclick = () => downloadCertificate(courseId);
+
+  const me = await api('/api/me').catch(() => null);
+
+  certBtn.onclick = () => downloadCertificate(me,courseId);
 
   // append under course title (or change target as you like)
   const container = document.getElementById("course-header") || document.body;
