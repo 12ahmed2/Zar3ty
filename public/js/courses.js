@@ -2,6 +2,9 @@
 // courses.js
 // =============================
 
+
+import {detectLanguage,translate} from './translate.js';
+
 // Fetch all courses
 async function fetchCourses() {
   try {

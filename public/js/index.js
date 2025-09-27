@@ -1,9 +1,11 @@
 // /static/js/index.js
 // Works with server routes in server.js and with navbar.js
+import {detectLanguage,translate} from './translate.js'
 
 const FP_KEY = 'client_fp';
 const LS_GUEST = 'guest_cart_ls';
 let LANG = 'en'; // default language
+
 
 function getFP() {
   let v = localStorage.getItem(FP_KEY);
@@ -73,22 +75,41 @@ async function loadProducts() {
   productsById = new Map((productsCache || []).map(p => [Number(p.id), p]));
   refreshEls();
   if (!els.grid) return;
-  els.grid.innerHTML = (productsCache || []).map(p => {
+
+  // process each product asynchronously
+  const productCards = await Promise.all((productsCache || []).map(async p => {
     const price = fmtMoney(p.price_cents);
     const stockNum = (p.stock === null || p.stock === undefined) ? null : Number(p.stock);
     const soldOut = stockNum !== null && stockNum <= 0;
-    const stockTxt = stockNum === null ? `<span class="muted">&nbsp;</span>` : (soldOut ? `<span class="error" data-translate="products.soldOut"></span>` : `<span class="muted"><label data-translate="index.stock"></label>: ${stockNum}</span>`);
+    const stockTxt = stockNum === null
+      ? `<span class="muted">&nbsp;</span>`
+      : (soldOut
+          ? `<span class="error" data-translate="products.soldOut"></span>`
+          : `<span class="muted"><label data-translate="index.stock"></label>: ${stockNum}</span>`
+        );
+
+    // translate name and description if needed
+    const name = detectLanguage(p.name) === LANG
+      ? p.name
+      : await translate(p.name, detectLanguage(p.name), LANG);
+
+    const description = detectLanguage(p.description || '') === LANG
+      ? p.description
+      : await translate(p.description, detectLanguage(p.description), LANG);
+
     return `
       <article class="card product">
         <img src="${p.image_url || '/static/img/placeholder.png'}" alt="">
-        <h4>${escapeHtml(translate(p.name))}</h4>
-        <p class="muted">${escapeHtml(translate(p.description || ''))}</p>
+        <h4>${name}</h4>
+        <p class="muted">${description}</p>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <div><strong>${price}</strong><br/>${stockTxt}</div>
           <button class="btn sm" data-add="${p.id}" ${soldOut ? 'disabled' : ''} data-translate="${soldOut ? 'products.soldOut' : 'products.add'}"></button>
         </div>
       </article>`;
-  }).join('');
+  }));
+
+  els.grid.innerHTML = productCards.join('');
 }
 
 /* localStorage guest mirror */
@@ -184,6 +205,36 @@ async function removeFromCart(item) {
   return { ok: true };
 }
 
+// async function renderCart() {
+//   refreshEls();
+//   const items = await getCart().catch(() => []);
+//   const total = items.reduce((s, it) => s + Number(it.qty) * Number(it.price_cents), 0);
+//   const count = items.reduce((s, it) => s + Number(it.qty), 0);
+
+//   if (els.cartCount) els.cartCount.textContent = count;
+//   if (els.cartTotal) els.cartTotal.textContent = fmtMoney(total);
+
+//   if (els.cartItems) {
+//     els.cartItems.innerHTML = items.map(it => {
+//       const encoded = encodeURIComponent(JSON.stringify(it));
+//       return `
+//       <div class="cart-item" data-cart-id="${it.id ?? ''}">
+//         <img src="${it.image_url || '/static/img/placeholder.png'}" alt="">
+//         <div class="grow">
+//           <div>${escapeHtml(translate(it.name))}</div>
+//           <div class="muted">x${it.qty}</div>
+//         </div>
+//         <div>${fmtMoney(it.price_cents)}</div>
+//         <button class="icon-btn" data-rm='${encoded}' aria-label="remove">✖</button>
+//       </div>`;
+//     }).join('');
+//   }
+
+//   // update navbar badge if present
+//   const navBadge = document.querySelector('#cart-count');
+//   if (navBadge) navBadge.textContent = count;
+// }
+
 async function renderCart() {
   refreshEls();
   const items = await getCart().catch(() => []);
@@ -194,25 +245,33 @@ async function renderCart() {
   if (els.cartTotal) els.cartTotal.textContent = fmtMoney(total);
 
   if (els.cartItems) {
-    els.cartItems.innerHTML = items.map(it => {
+    // Wrap map in Promise.all and make callback async
+    const cartHtmlArray = await Promise.all(items.map(async (it) => {
       const encoded = encodeURIComponent(JSON.stringify(it));
+      const translatedName = detectLanguage(it.name) === LANG
+        ? it.name
+        : await translate(it.name, detectLanguage(it.name), LANG);
+
       return `
       <div class="cart-item" data-cart-id="${it.id ?? ''}">
         <img src="${it.image_url || '/static/img/placeholder.png'}" alt="">
         <div class="grow">
-          <div>${escapeHtml(translate(it.name))}</div>
+          <div>${escapeHtml(translatedName)}</div>
           <div class="muted">x${it.qty}</div>
         </div>
         <div>${fmtMoney(it.price_cents)}</div>
         <button class="icon-btn" data-rm='${encoded}' aria-label="remove">✖</button>
       </div>`;
-    }).join('');
+    }));
+
+    els.cartItems.innerHTML = cartHtmlArray.join('');
   }
 
   // update navbar badge if present
   const navBadge = document.querySelector('#cart-count');
   if (navBadge) navBadge.textContent = count;
 }
+
 
 async function updateCartBadge() {
   refreshEls();
@@ -244,16 +303,6 @@ async function updateCartBadge() {
   if (navBadge) navBadge.textContent = count;
 }
 
-/* LANGUAGE HANDLER */
-function translate(text) {
-  if (LANG === 'ar') {
-    // simple static translation example (replace with actual API if needed)
-    const dict = { 'Add': 'إضافة', 'Sold out': 'نفذ المخزون', 'Stock': 'المخزون' };
-    return dict[text] || text;
-  }
-  return text;
-}
-
 function setLanguage(lang) {
   LANG = lang === 'ar' ? 'ar' : 'en';
   localStorage.setItem('lang', LANG);
@@ -278,8 +327,8 @@ document.addEventListener('click', async (e) => {
       await renderCart();
       openCart();
     } catch (err) {
-      if (err && err.status === 401) { toast('Please log in'); show(document.querySelector('#dlg-login')); return; }
-      toast(err?.data?.error || translate('Add failed'));
+      if (err && err.status === 401) { toast(detectLanguage('Please log in') === LANG? 'Please log in': await translate('Please log in', detectLanguage('Please log in'), LANG)); show(document.querySelector('#dlg-login')); return; }
+      toast(err?.data?.error || detectLanguage('Add failed') === LANG? 'Add failed': await translate('Add failed', detectLanguage('Add failed'), LANG));
     }
     return;
   }
@@ -304,7 +353,7 @@ document.addEventListener('click', async (e) => {
       await removeFromCart(item);
       await renderCart();
     } catch (err) {
-      toast(err?.data?.error || translate('Remove failed'));
+      toast(err?.data?.error || detectLanguage('Remove failed') === LANG? 'Remove failed': await translate('Remove failed', detectLanguage('Remove failed'), LANG));
     }
     return;
   }
@@ -315,13 +364,13 @@ document.addEventListener('click', async (e) => {
   }
 
   if (e.target.closest && e.target.closest('#btn-checkout')) {
-    if (typeof window.me === 'undefined' || !window.me) { toast(translate('Log in to checkout')); show(document.querySelector('#dlg-login')); return; }
+    if (typeof window.me === 'undefined' || !window.me) { toast(detectLanguage('Log in to checkout') === LANG? 'Log in to checkout': await translate('Log in to checkout', detectLanguage('Log in to checkout'), LANG)); show(document.querySelector('#dlg-login')); return; }
     try {
       const out = await api('/api/checkout', { method: 'POST' });
-      toast(`${translate('Order')} #${out.order_id} ${translate('placed')}`);
+      toast(`${detectLanguage('Order') === LANG? 'Order': await translate('Order', detectLanguage('Order'), LANG)} #${out.order_id} ${detectLanguage('placed') === LANG? 'placed': await translate('placed', detectLanguage('placed'), LANG)}`);
       await renderCart();
     } catch (err) {
-      toast(err?.data?.error || translate('Checkout failed'));
+      toast(err?.data?.error || detectLanguage('Checkout failed') === LANG? 'Checkout failed': await translate('Checkout failed', detectLanguage('Checkout failed'), LANG));
     }
     return;
   }

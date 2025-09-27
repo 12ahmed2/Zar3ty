@@ -165,6 +165,9 @@
         document.documentElement.lang = selectedLang;
         if (typeof window.loadLanguage === 'function') await window.loadLanguage(selectedLang);
         renderIntoPlaceholder();
+
+        // Reload the page to apply the new language globally
+        location.reload();
       });
     }
   }
