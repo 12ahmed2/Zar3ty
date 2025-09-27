@@ -1017,6 +1017,34 @@ app.get('/api/me/enrollments', requireAuth, async (req, res) => {
 });
 
 
+app.get('/api/course/:id/completedcourse', async (req, res) => {
+  const courseId = Number(req.params.id);
+  if (isNaN(courseId)) {
+    return res.status(400).json({ error: 'Invalid course ID' });
+  }
+
+  try {
+    const r = await pool.query(
+      `SELECT completed_course
+       FROM courses
+       WHERE id = $1`,
+      [courseId]
+    );
+
+    if (r.rows.length === 0) {
+      return res.status(404).json({ error: 'Course not found', completed_course: false });
+    }
+
+    // Ensure completed_course is boolean
+    const completed = !!r.rows[0].completed_course;
+    res.json([{ completed_course: completed }]);
+
+  } catch (err) {
+    console.error("Error fetching completed course:", err);
+    res.status(500).json({ error: "Failed to load completed course" });
+  }
+});
+
 
 
 // ensure this route is mounted with optionalAuth middleware:

@@ -1,6 +1,4 @@
-// public/js/course.js
-// Inline playback: prefer YouTube IFrame API (to detect ended). Fallback to embedded iframe + manual "Mark watched".
-
+// Utility to fetch JSON with optional body and credentials
 async function fetchJson(url, opts = {}) {
   opts.credentials = opts.credentials || 'include';
   if (opts.json !== undefined) {
@@ -20,11 +18,28 @@ async function fetchJson(url, opts = {}) {
   return data;
 }
 
+
+// Get course ID from URL path
 function courseIdFromPath() {
   const parts = location.pathname.split('/').filter(Boolean);
   return Number(parts[parts.length-1]);
 }
 
+function showCertificateButton(courseId) {
+  // prevent duplicates
+  if (document.querySelector(".certificate-btn")) return;
+
+  const certBtn = document.createElement("button");
+  certBtn.textContent = "🎓 Download Certificate";
+  certBtn.className = "certificate-btn";
+  // certBtn.onclick = () => downloadCertificate(courseId);
+
+  // append under course title (or change target as you like)
+  const container = document.getElementById("course-header") || document.body;
+  container.appendChild(certBtn);
+}
+
+// Parse YouTube video ID from URL or raw input
 function parseYouTubeId(input) {
   if (!input) return null;
   if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input;
@@ -42,7 +57,7 @@ function parseYouTubeId(input) {
   return m ? m[1] : null;
 }
 
-/* UI refs */
+// UI references
 const el = {
   root: document.getElementById('course-page'),
   title: document.getElementById('course-title'),
@@ -60,7 +75,7 @@ function badge(text){
   return s;
 }
 
-/* YT API loader */
+// Load YouTube API
 let YTready = null;
 function loadYouTubeAPI(timeoutMs = 5000) {
   if (YTready) return YTready;
@@ -72,35 +87,73 @@ function loadYouTubeAPI(timeoutMs = 5000) {
     document.head.appendChild(tag);
     let resolved = false;
     window.onYouTubeIframeAPIReady = () => { resolved = true; resolve(window.YT); };
-    setTimeout(() => {
-      if (!resolved) resolve(null); // indicate API not available within timeout
-    }, timeoutMs);
+    setTimeout(() => { if (!resolved) resolve(null); }, timeoutMs);
   });
   return YTready;
 }
 
-/* state */
+// State
 let COURSE = null;
-let players = []; // store YT.Player instances for cleanup
+let players = [];
+let ADMIN_COMPLETED = false;
 
+// Fetch admin completion
+async function fetchAdminCompletedOnce(courseId) {
+  try {
+    const res = await fetch(`/api/course/${courseId}/completedcourse`, { credentials: 'include' });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || res.statusText);
+    }
+
+    const data = await res.json();
+    // Safely check if first row exists and has completed_course
+    ADMIN_COMPLETED = Array.isArray(data) && data.length > 0 ? !!data[0].completed_course : false;
+
+  } catch (err) {
+    console.error('Error fetching admin completion:', err);
+    ADMIN_COMPLETED = false;
+  }
+}
+
+
+// Check if user completed course
+function isUserCompleted(course) {
+  if (!ADMIN_COMPLETED) return false;
+  if (!course.modules || !Array.isArray(course.modules)) return false;
+  if (!course.progress || !course.progress.watched) return false;
+
+  for (let mi = 0; mi < course.modules.length; mi++) {
+    const module = course.modules[mi];
+    const vids = module.videos || [];
+    const watched = course.progress.watched[`m${mi}`] || [];
+    for (let vi = 0; vi < vids.length; vi++) {
+      if (!watched.includes(vi)) return false;
+    }
+  }
+  return true;
+}
+
+// Mark a video as watched
 async function markWatched(courseId, module_idx, video_idx) {
   try {
     const res = await fetchJson(`/api/courses/${courseId}/progress`, {
       method: 'POST',
       json: { module_idx: Number(module_idx), video_idx: Number(video_idx) }
     });
+
     COURSE.progress = COURSE.progress || { watched: {} };
     const key = `m${module_idx}`;
     COURSE.progress.watched[key] = COURSE.progress.watched[key] || [];
     if (!COURSE.progress.watched[key].includes(Number(video_idx))) {
       COURSE.progress.watched[key].push(Number(video_idx));
     }
-    if (res.completed) {
-      COURSE.completed_at = new Date().toISOString();
-      showCompletedBadge();
-    }
+
     const vidEl = document.querySelector(`[data-mod="${module_idx}"][data-vid="${video_idx}"]`);
     if (vidEl) vidEl.classList.add('watched');
+
+    if (isUserCompleted(COURSE)) showCompletedBadge();
+
     return res;
   } catch (err) {
     console.error('markWatched error', err);
@@ -108,33 +161,31 @@ async function markWatched(courseId, module_idx, video_idx) {
   }
 }
 
+// Enroll/unenroll user
 async function setEnroll(courseId, enroll) {
   try {
     if (enroll) {
       await fetchJson(`/api/courses/${courseId}/enroll`, { method: 'POST' });
       COURSE.enrolled = true;
-      // ✅ language-ready
       el.enrollBtn.dataset.translate = 'courses.unenroll';
-      el.enrollBtn.textContent = ''; // lang.js will fill
+      el.enrollBtn.textContent = '';
       el.enrollBtn.dataset.enrolled = 'true';
       el.enrollBtn.setAttribute('aria-pressed', 'true');
     } else {
       await fetchJson(`/api/courses/${courseId}/enroll`, { method: 'DELETE' });
       COURSE.enrolled = false;
-      // ✅ language-ready
       el.enrollBtn.dataset.translate = 'courses.enroll';
       el.enrollBtn.textContent = '';
       el.enrollBtn.dataset.enrolled = 'false';
       el.enrollBtn.setAttribute('aria-pressed', 'false');
     }
-    // trigger lang.js to update immediately
     if (window.applyTranslations) window.applyTranslations();
   } catch (err) {
     console.error('enroll error', err);
-    alert(err.data?.error || 'Enroll action failed');
   }
 }
 
+// Show completed badge
 function showCompletedBadge() {
   const h1 = el.title;
   if (!h1) return;
@@ -143,27 +194,33 @@ function showCompletedBadge() {
   }
 }
 
-/* Render */
+// Render course UI
 async function renderCourse(course) {
   COURSE = course;
+  await fetchAdminCompletedOnce(course.id);
+
   el.title.textContent = course.title || 'Untitled course';
   el.desc.textContent = course.description || '';
   el.img.src = course.image_url || '/static/img/placeholder-course.png';
 
   if (el.enrollBtn) {
     el.enrollBtn.dataset.enrolled = course.enrolled ? 'true' : 'false';
-    // ✅ language-ready
     el.enrollBtn.dataset.translate = course.enrolled ? 'courses.unenroll' : 'courses.enroll';
-    el.enrollBtn.textContent = ''; // lang.js will fill
+    el.enrollBtn.textContent = '';
     el.enrollBtn.setAttribute('aria-pressed', course.enrolled ? 'true' : 'false');
-    el.enrollBtn.onclick = async () => {
-      const enrolled = el.enrollBtn.dataset.enrolled === 'true';
-      await setEnroll(course.id, !enrolled);
-    };
+    
+  el.enrollBtn.onclick = async () => {
+    // Use COURSE.enrolled, not dataset
+    await setEnroll(course.id, !COURSE.enrolled);
+  };
+
     if (window.applyTranslations) window.applyTranslations();
   }
 
-  if (course.completed_at) showCompletedBadge();
+  if (isUserCompleted(course)){
+    showCompletedBadge();
+    showCertificateButton(course.id);
+  }
 
   clearNode(el.modulesList);
   players.forEach(p => { try { p.destroy && p.destroy(); } catch {} });
@@ -209,9 +266,7 @@ async function renderCourse(course) {
       if (watched) card.classList.add('watched');
       vidsContainer.appendChild(card);
 
-      // click to toggle or create player
       title.addEventListener('click', async () => {
-        // if player-wrap exists toggle visibility
         const existing = card.querySelector('.player-wrap');
         if (existing) {
           existing.style.display = existing.style.display === 'none' ? 'block' : 'none';
@@ -227,7 +282,6 @@ async function renderCourse(course) {
           return;
         }
 
-        // If YT API loaded use it to detect ends and auto-mark watched.
         if (YT && YT.Player) {
           try {
             const container = document.createElement('div');
@@ -256,7 +310,6 @@ async function renderCourse(course) {
           }
         }
 
-        // Fallback: embed iframe (plays inline) and provide a manual "Mark watched" button
         const iframe = document.createElement('iframe');
         iframe.width = '100%';
         iframe.height = '360';
@@ -268,7 +321,6 @@ async function renderCourse(course) {
         const manualBtn = document.createElement('button');
         manualBtn.className = 'btn sm mt-8';
         manualBtn.type = 'button';
-        // ✅ language-ready for mark watched
         manualBtn.dataset.translate = 'courses.markWatched';
         manualBtn.textContent = '';
         manualBtn.addEventListener('click', async () => {
@@ -287,43 +339,7 @@ async function renderCourse(course) {
   });
 }
 
-async function renderCourseInfo(course) {
-  COURSE = course;
-  el.title.textContent = course.title || 'Untitled course';
-  el.desc.textContent = course.description || '';
-  el.img.src = course.image_url || '/static/img/placeholder-course.png';
-
-  if (el.enrollBtn) {
-    el.enrollBtn.dataset.enrolled = course.enrolled ? 'true' : 'false';
-    // ✅ language-ready
-    el.enrollBtn.dataset.translate = course.enrolled ? 'courses.unenroll' : 'courses.enroll';
-    el.enrollBtn.textContent = ''; // lang.js will fill
-    el.enrollBtn.setAttribute('aria-pressed', course.enrolled ? 'true' : 'false');
-    el.enrollBtn.onclick = async () => {
-      const enrolled = el.enrollBtn.dataset.enrolled === 'true';
-      await setEnroll(course.id, !enrolled);
-      if (!enrolled) {
-        // just enrolled, reload to show full content
-        location.reload();
-      }
-    };
-    if (window.applyTranslations) window.applyTranslations();
-  }
-
-  if (course.completed_at) showCompletedBadge();
-
-  clearNode(el.modulesList);
-  const info = document.createElement('div');
-  info.className = 'course-info';
-  info.innerHTML = `
-    <p class="muted">You must enroll to access the course content.</p>
-    <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>
-    <p>After enrolling, you can track your progress as you complete the videos.</p>
-  `;
-  el.modulesList.appendChild(info);
-}
-
-/* bootstrap */
+// Check if user is logged in
 async function isLoggedIn() {
   try {
     const r = await fetch('/api/me', { credentials: 'include' });
@@ -331,29 +347,73 @@ async function isLoggedIn() {
   } catch { return null; }
 }
 
+// Bootstrapping course page
 (async function bootCourse() {
   try {
     const id = courseIdFromPath();
-    const me = await isLoggedIn().catch(()=>null);
-    const course = await fetchJson(`/api/courses/${id}`, { method: 'GET' });
+    const me = await isLoggedIn().catch(() => null);
+    let course = await fetchJson(`/api/courses/${id}`, { method: 'GET' });
 
+    // If user is logged in, check enrollment
     if (me) {
       try {
         const enrolls = await fetchJson('/api/me/enrollments', { method: 'GET' });
-        const e = (Array.isArray(enrolls) ? enrolls.find(x => Number(x.course_id) === Number(id)) : null);
+        const e = Array.isArray(enrolls) ? enrolls.find(x => Number(x.course_id) === Number(id)) : null;
         if (e) {
           course.enrolled = true;
           course.progress = e.meta || course.progress || { watched: {} };
-          if (e.completed_at) course.completed_at = e.completed_at;
         } else {
-          course.enrolled = !!course.enrolled;
+          course.enrolled = false;
+          course.progress = { watched: {} };
         }
       } catch (e) {
         console.warn('Could not load enrollments fallback', e);
+        course.enrolled = !!course.enrolled;
       }
     }
-    if (me && course.enrolled) await renderCourse(course);
-    else await renderCourseInfo(course);
+
+    // Render course page
+    if (el.enrollBtn) {
+      // Setup enroll button click
+      el.enrollBtn.onclick = async () => {
+  try {
+    // Use the local course object, not COURSE (may be null)
+    await setEnroll(course.id, !course.enrolled);
+
+    // Update local state
+    course.enrolled = !course.enrolled;
+
+    // After enrollment, render course content
+    if (course.enrolled) {
+      await renderCourse(course); // sets COURSE internally
+    } else {
+      clearNode(el.modulesList);
+      const info = document.createElement('div');
+      info.className = 'course-info';
+      info.innerHTML = `<p class="muted">You must enroll to access the course content.</p>
+                        <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>`;
+      el.modulesList.appendChild(info);
+    }
+    
+  } catch (err) {
+    console.error('Enroll button click error', err);
+  }
+};
+
+    }
+
+    // Render course content if already enrolled
+    if (course.enrolled) {
+      await renderCourse(course);
+    } else {
+      clearNode(el.modulesList);
+      const info = document.createElement('div');
+      info.className = 'course-info';
+      info.innerHTML = `<p class="muted">You must enroll to access the course content.</p>
+                        <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>`;
+      el.modulesList.appendChild(info);
+    }
+    
   } catch (err) {
     console.error('Failed loading course', err);
     const root = document.getElementById('course-page') || document.body;
