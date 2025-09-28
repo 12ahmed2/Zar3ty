@@ -31,6 +31,7 @@
   },
   "courses": {
     "header": "دوراتنا",
+    "download_certificate": "تحميل الشهادة",
     "enroll": "التسجيل في الدورة",
     "unenroll": "إلغاء التسجيل من الدورة",
     "noCourses": "لا توجد دورات متاحة.",

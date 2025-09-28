@@ -31,6 +31,7 @@
   },
   "courses": {
     "header": "Our Courses",
+    "download_certificate": "Download Certificate",
     "enroll": "Enroll in Course",
     "unenroll": "Unenroll from Course",
     "noCourses": "No courses available.",
