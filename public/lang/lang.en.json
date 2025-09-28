@@ -15,6 +15,8 @@
     "soldOut": "Sold Out"
   },
   "index": {
+    "aboutUsTitle": "About Us",
+    "aboutUsContent": "At Zar3ty, we aim to empower farmers and gardening enthusiasts to manage their farms efficiently and effortlessly. We provide smart solutions that help you track your production and improve crop quality through technology and innovation. Our vision is to build a sustainable digital agricultural community where everyone can manage their farm with confidence and effectiveness, achieving the best results in a smart and safe way. At Zar3ty, we believe that modern agriculture is the key to a more sustainable and prosperous future for all.",
     "manager": "Manager of your farm",
     "welcomeMessage": "Welcome to Zar3ty",
     "productsTitle": "Products",

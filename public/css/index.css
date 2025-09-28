@@ -1002,3 +1002,36 @@ html[dir="rtl"] .toast.show {
     font-size: 1rem;
   }
 }
+
+
+/* About Us Section */
+.about-us {
+  max-width: 900px;        /* حد أقصى للعرض */
+  margin: 80px auto;       /* مسافة من الأعلى والأسفل + تمركز */
+  padding: 40px 20px;      /* حشو داخلي */
+  background-color: #f9f9f9; /* خلفية فاتحة */
+  border-radius: 12px;     /* حواف مستديرة */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* ظل خفيف */
+  text-align: center;      /* توسيط النصوص */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* تأثير عند hover */
+}
+
+.about-us:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.about-us .section-title {
+  font-size: 2.2rem;       /* حجم العنوان */
+  color: #2c3e50;          /* لون العنوان */
+  margin-bottom: 20px;     /* مسافة تحت العنوان */
+  font-weight: 700;        /* سماكة الخط */
+}
+
+.about-us p {
+  font-size: 1.1rem;       /* حجم الفقرة */
+  line-height: 1.8;        /* تباعد الأسطر */
+  color: #555;             /* لون النص */
+  max-width: 800px;        /* حد أقصى لعرض الفقرة */
+  margin: 0 auto;          /* تمركز الفقرة */
+}
