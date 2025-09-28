@@ -30,6 +30,9 @@
     }
   },
   "courses": {
+    "must_enroll": "You must enroll to access the course content.",
+    "has": "This course has",
+    "must_log_in": "You must log in to access this course.",
     "header": "Our Courses",
     "download_certificate": "Download Certificate",
     "enroll": "Enroll in Course",

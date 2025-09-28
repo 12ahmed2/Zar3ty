@@ -1,3 +1,6 @@
+import {detectLanguage,translate} from './translate.js';
+
+
 // Utility to fetch JSON with optional body and credentials
 async function fetchJson(url, opts = {}) {
   opts.credentials = opts.credentials || 'include';
@@ -18,6 +21,7 @@ async function fetchJson(url, opts = {}) {
   return data;
 }
 
+const LANG = localStorage.getItem('lang') || 'en';
 
 // Get course ID from URL path
 function courseIdFromPath() {
@@ -266,7 +270,6 @@ function showCompletedBadge() {
     h1.appendChild(badge('Completed'));
   }
 }
-
 // Render course UI
 async function renderCourse(course, me) {
   // keep global reference
@@ -274,8 +277,8 @@ async function renderCourse(course, me) {
   await fetchAdminCompletedOnce(course.id);
 
   // update header info
-  el.title.textContent = course.title || 'Untitled course';
-  el.desc.textContent = course.description || '';
+  el.title.textContent = detectLanguage(course.title) === LANG? course.title: await translate(course.title, detectLanguage(course.title), LANG)|| 'Untitled course';
+  el.desc.textContent = detectLanguage(course.description) === LANG? course.description: await translate(course.description, detectLanguage(course.description), LANG)|| '';
   el.img.src = course.image_url || '/static/img/placeholder-course.png';
 
   // remove any old module content / players
@@ -308,8 +311,8 @@ async function renderCourse(course, me) {
     const info = document.createElement('div');
     info.className = 'course-info';
     info.innerHTML = `
-      <p class="muted">You must log in to access this course.</p>
-      <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>
+      <p class="muted" data-translate="courses.must_log_in"></p>
+      <p><label data-translate="courses.has"></label><strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> <label data-translate="courses.modules"></label></p>
     `;
     el.modulesList.appendChild(info);
 
@@ -329,8 +332,8 @@ async function renderCourse(course, me) {
     const info = document.createElement('div');
     info.className = 'course-info';
     info.innerHTML = `
-      <p class="muted">You must enroll to access the course content.</p>
-      <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>
+      <p class="muted" data-translate="courses.must_enroll"></p>
+      <p><label data-translate="courses.has"></label><strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> <label data-translate="courses.modules"></label></p>
     `;
     el.modulesList.appendChild(info);
 
