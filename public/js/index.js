@@ -462,6 +462,24 @@ function toast(msg) {
   window.__toastTO = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
+const landingImages = [
+  "static/static/img/agri-landing.jpg",
+  "static/static/img/agri-landing2.jpg",
+  "static/static/img/agri-landing3.jpg"
+];
+
+const landingImg = document.querySelector(".landing img");
+
+let currentIndex = 0;
+
+async function changeLandingImage() {
+  if (!landingImg) return;
+
+  currentIndex = (currentIndex + 1) % landingImages.length;
+  landingImg.src = landingImages[currentIndex];
+}
+
+
 /* Boot */
 (async function boot() {
   if (typeof window.refreshAuthUI === 'function') {
@@ -475,4 +493,5 @@ function toast(msg) {
   await syncLSGuestToServer().catch(() => {});
   await updateCartBadge().catch(() => {});
   await renderCart().catch(() => {});
+  setInterval(changeLandingImage, 2000); 
 })();
