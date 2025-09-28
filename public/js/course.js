@@ -101,11 +101,9 @@ async function downloadCertificate(me,courseId) {
 }
 
 
-async function showCertificateButton(courseId) {
+async function showCertificateButton(courseId, me) {
   const certBtn = document.getElementById("certificate-btn");
   certBtn.style.display = 'inline-block';
-
-  const me = await api('/api/me').catch(() => null);
 
   certBtn.onclick = () => downloadCertificate(me,courseId);
 
@@ -270,44 +268,130 @@ function showCompletedBadge() {
 }
 
 // Render course UI
-async function renderCourse(course) {
+async function renderCourse(course, me) {
+  // keep global reference
   COURSE = course;
   await fetchAdminCompletedOnce(course.id);
 
+  // update header info
   el.title.textContent = course.title || 'Untitled course';
   el.desc.textContent = course.description || '';
   el.img.src = course.image_url || '/static/img/placeholder-course.png';
 
-  if (el.enrollBtn) {
-    el.enrollBtn.dataset.enrolled = course.enrolled ? 'true' : 'false';
-    el.enrollBtn.dataset.translate = course.enrolled ? 'courses.unenroll' : 'courses.enroll';
-    el.enrollBtn.textContent = '';
-    el.enrollBtn.setAttribute('aria-pressed', course.enrolled ? 'true' : 'false');
-    
-  el.enrollBtn.onclick = async () => {
-    // Use COURSE.enrolled, not dataset
-    await setEnroll(course.id, !COURSE.enrolled);
-  };
-
-    if (window.applyTranslations) window.applyTranslations();
-  }
-
-  if (isUserCompleted(course)){
-    showCompletedBadge();
-    showCertificateButton(course.id);
-  }
-
+  // remove any old module content / players
   clearNode(el.modulesList);
   players.forEach(p => { try { p.destroy && p.destroy(); } catch {} });
   players = [];
 
+  // Ensure we have a single enroll button instance (remove previous listeners)
+  if (el.enrollBtn) {
+    const old = el.enrollBtn;
+    const clone = old.cloneNode(true);
+    if (old.parentNode) old.parentNode.replaceChild(clone, old);
+    el.enrollBtn = clone; // update reference in the shared `el` object
+    el.enrollBtn.style.display = ''; // make visible (allow CSS to control real layout)
+  }
+
+  // Helper to set the shared button state and handler
+  function setSharedButton({ translateKey = '', textFallback = '', pressed = false, onClick }) {
+    if (!el.enrollBtn) return;
+    el.enrollBtn.dataset.translate = translateKey || '';
+    el.enrollBtn.textContent = textFallback || '';
+    el.enrollBtn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+    el.enrollBtn.onclick = onClick || null;
+    if (window.applyTranslations) window.applyTranslations();
+  }
+
+  // ========= CASE: user NOT logged in =========
+  if (!me) {
+    // show basic info in modules area (no duplicate enroll buttons)
+    const info = document.createElement('div');
+    info.className = 'course-info';
+    info.innerHTML = `
+      <p class="muted">You must log in to access this course.</p>
+      <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>
+    `;
+    el.modulesList.appendChild(info);
+
+    // repurpose shared button as "Log in" (single button on the page)
+    setSharedButton({
+      translateKey: 'navbar.login',    // if you use translations; otherwise fallback text used
+      textFallback: 'Log in',
+      pressed: false,
+      onClick: () => { window.location.href = '/login'; }
+    });
+
+    return;
+  }
+
+  // ========= CASE: logged in BUT NOT enrolled =========
+  if (!course.enrolled) {
+    const info = document.createElement('div');
+    info.className = 'course-info';
+    info.innerHTML = `
+      <p class="muted">You must enroll to access the course content.</p>
+      <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>
+    `;
+    el.modulesList.appendChild(info);
+
+    // shared button becomes Enroll
+    setSharedButton({
+      translateKey: 'courses.enroll',
+      textFallback: 'Enroll',
+      pressed: false,
+      onClick: async () => {
+        try {
+          // ensure user still logged in
+          if (!await isLoggedIn()) {
+            // fallback: redirect to login
+            window.location.href = '/login';
+            return;
+          }
+          await setEnroll(course.id, true); // backend call
+          COURSE.enrolled = true;
+          // re-render full course now that user is enrolled
+          await renderCourse(COURSE, me);
+        } catch (err) {
+          console.error('Enroll failed', err);
+        }
+      }
+    });
+
+    return;
+  }
+
+  // ========= CASE: logged in AND enrolled -> show full content =========
+  // shared button becomes Unenroll (single button)
+  setSharedButton({
+    translateKey: 'courses.unenroll',
+    textFallback: 'Unenroll',
+    pressed: true,
+    onClick: async () => {
+      try {
+        await setEnroll(course.id, false);
+        COURSE.enrolled = false;
+        // re-render (will show the not-enrolled info + shared button becomes Enroll)
+        await renderCourse(COURSE, me);
+      } catch (err) {
+        console.error('Unenroll failed', err);
+      }
+    }
+  });
+
+  // Completed badge / certificate
+  if (isUserCompleted(course)) {
+    showCompletedBadge();
+    showCertificateButton(course.id, me);
+  }
+
+  // Render modules (only for enrolled users)
   const modules = Array.isArray(course.modules) ? course.modules : [];
   const YT = await loadYouTubeAPI();
 
   modules.forEach((m, mi) => {
     const section = document.createElement('section');
     section.className = 'module-card';
-    section.innerHTML = `<h3 class="module-title">${m.title || 'Module ' + (mi+1)}</h3><div class="videos" data-mod="${mi}"></div>`;
+    section.innerHTML = `<h3 class="module-title">${m.title || 'Module ' + (mi + 1)}</h3><div class="videos" data-mod="${mi}"></div>`;
     el.modulesList.appendChild(section);
 
     const vidsContainer = section.querySelector('.videos');
@@ -325,7 +409,7 @@ async function renderCourse(course) {
 
       const title = document.createElement('div');
       title.className = 'video-title';
-      title.textContent = v.title || `Video ${vi+1}`;
+      title.textContent = v.title || `Video ${vi + 1}`;
       title.style.cursor = 'pointer';
 
       const controls = document.createElement('div');
@@ -414,6 +498,8 @@ async function renderCourse(course) {
   });
 }
 
+
+
 // Check if user is logged in
 async function isLoggedIn() {
   try {
@@ -422,14 +508,13 @@ async function isLoggedIn() {
   } catch { return null; }
 }
 
-// Bootstrapping course page
 (async function bootCourse() {
   try {
     const id = courseIdFromPath();
     const me = await isLoggedIn().catch(() => null);
+
     let course = await fetchJson(`/api/courses/${id}`, { method: 'GET' });
 
-    // If user is logged in, check enrollment
     if (me) {
       try {
         const enrolls = await fetchJson('/api/me/enrollments', { method: 'GET' });
@@ -442,58 +527,14 @@ async function isLoggedIn() {
           course.progress = { watched: {} };
         }
       } catch (e) {
-        console.warn('Could not load enrollments fallback', e);
+        console.warn('Could not load enrollments, fallback', e);
         course.enrolled = !!course.enrolled;
       }
     }
 
-    // Render course page
-    if (el.enrollBtn) {
-      // Setup enroll button click
-      el.enrollBtn.onclick = async () => {
-  try {
-      if (!await isLoggedIn()) {
-      alert("You need to log in first to enroll in a course.");
-      window.location.href = "/login"; // redirect to login page
-      return;
-    }
-    // Use the local course object, not COURSE (may be null)
-    await setEnroll(course.id, !course.enrolled);
+    // بدل ما نرندر هنا، نرميها على renderCourse
+    renderCourse(course, me);
 
-    // Update local state
-    course.enrolled = !course.enrolled;
-
-    // After enrollment, render course content
-    if (course.enrolled) {
-      await renderCourse(course); // sets COURSE internally
-    } else {
-      clearNode(el.modulesList);
-      const info = document.createElement('div');
-      info.className = 'course-info';
-      info.innerHTML = `<p class="muted">You must enroll to access the course content.</p>
-                        <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>`;
-      el.modulesList.appendChild(info);
-    }
-    
-  } catch (err) {
-    console.error('Enroll button click error', err);
-  }
-};
-
-    }
-
-    // Render course content if already enrolled
-    if (course.enrolled) {
-      await renderCourse(course);
-    } else {
-      clearNode(el.modulesList);
-      const info = document.createElement('div');
-      info.className = 'course-info';
-      info.innerHTML = `<p class="muted">You must enroll to access the course content.</p>
-                        <p>This course has <strong>${Array.isArray(course.modules) ? course.modules.length : 0}</strong> modules.</p>`;
-      el.modulesList.appendChild(info);
-    }
-    
   } catch (err) {
     console.error('Failed loading course', err);
     const root = document.getElementById('course-page') || document.body;
