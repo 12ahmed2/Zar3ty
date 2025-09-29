@@ -23,10 +23,10 @@
     color: #111;
   }
 
-  .container {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 24px;
+  .container { 
+    max-width: var(--container); 
+    margin: 24px auto; 
+    padding: 70px 0 30px 0;  /* top=0, right=0, bottom=30px, left=0 */
   }
 
   .site-header {
