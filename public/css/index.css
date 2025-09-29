@@ -335,11 +335,40 @@ button {
   animation: fadeIn .45s ease-out; 
 }
 
-.section-title { 
-  margin: 8px 0 18px; 
-  font-size: 1.25rem; 
-  font-weight: 700; 
-  color: var(--text); 
+.products-section { 
+  max-width: 900px;      
+  margin: 80px auto;  /* top right bottom left */
+  max-height: 500px;  
+  padding: 40px 20px;      
+  background-color: #f9f9f9; 
+  border-radius: 12px;     
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); 
+  text-align: center;      
+  transition: transform 0.3s ease, box-shadow 0.3s ease; 
+  overflow-y: auto; 
+  overflow-x: hidden; 
+}
+.products-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.products-section::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+.products-section::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.35);
+}
+.products-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+.products-section .section-title { 
+  font-size: 2.2rem;       
+  color: #2c3e50;         
+  margin-bottom: 20px;     
+  font-weight: 700;        
 }
 
 .grid {
@@ -347,7 +376,8 @@ button {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--gap);
   align-items: start;
-  margin-bottom: 24px;
+  justify-content: center; 
+  margin: 0 auto 24px auto;
 }
 
 .product {
@@ -941,10 +971,6 @@ html[dir="rtl"] .toast.show {
   transform: translateX(0);
 }
 
-/* =========================
-  End of index.css — Enhanced UI/UX
-  ========================= */
-
 /* Landing Section */
 .landing {
   position: relative;
@@ -1006,14 +1032,14 @@ html[dir="rtl"] .toast.show {
 
 /* About Us Section */
 .about-us {
-  max-width: 900px;        /* حد أقصى للعرض */
-  margin: 80px auto;       /* مسافة من الأعلى والأسفل + تمركز */
-  padding: 40px 20px;      /* حشو داخلي */
-  background-color: #f9f9f9; /* خلفية فاتحة */
-  border-radius: 12px;     /* حواف مستديرة */
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* ظل خفيف */
-  text-align: center;      /* توسيط النصوص */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* تأثير عند hover */
+  max-width: 900px;        
+  margin: 80px auto;       
+  padding: 40px 20px;      
+  background-color: #f9f9f9; 
+  border-radius: 12px;     
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); 
+  text-align: center;      
+  transition: transform 0.3s ease, box-shadow 0.3s ease; 
 }
 
 .about-us:hover {
@@ -1022,16 +1048,130 @@ html[dir="rtl"] .toast.show {
 }
 
 .about-us .section-title {
-  font-size: 2.2rem;       /* حجم العنوان */
-  color: #2c3e50;          /* لون العنوان */
-  margin-bottom: 20px;     /* مسافة تحت العنوان */
-  font-weight: 700;        /* سماكة الخط */
+  font-size: 2.2rem;       
+  color: #2c3e50;         
+  margin-bottom: 20px;     
+  font-weight: 700;        
 }
 
 .about-us p {
-  font-size: 1.1rem;       /* حجم الفقرة */
-  line-height: 1.8;        /* تباعد الأسطر */
-  color: #555;             /* لون النص */
-  max-width: 800px;        /* حد أقصى لعرض الفقرة */
-  margin: 0 auto;          /* تمركز الفقرة */
+  font-size: 1.1rem;       
+  line-height: 1.8;        
+  color: #555;             
+  max-width: 800px;        
+  margin: 0 auto;          
 }
+
+
+
+/* Products controls (search + pagination) */
+.products-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;         /* center controls in the products-section */
+  flex-wrap: wrap;
+  margin: 18px 0 28px;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,252,0.6));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(2,6,23,0.04);
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* search input */
+.products-controls #products-search {
+  flex: 1 1 320px;
+  min-width: 180px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg,#fff,#fafbfd);
+  font-size: 0.96rem;
+  color: var(--text);
+  box-shadow: none;
+  transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+}
+
+.products-controls #products-search::placeholder {
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.products-controls #products-search:focus {
+  outline: none;
+  border-color: var(--brand-1);
+  box-shadow: 0 6px 18px rgba(37,99,235,0.08);
+  transform: translateY(-1px);
+}
+
+/* prev/next buttons */
+.products-controls button#products-prev,
+.products-controls button#products-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  min-width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.products-controls button#products-prev:hover,
+.products-controls button#products-next:hover {
+  transform: translateY(-3px);
+  background: var(--brand-1);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(37,99,235,0.12);
+}
+
+.products-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(180deg,#f5f7fb,#fbfdff);
+}
+
+/* pagination text / info */
+.products-controls #products-pagination {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.95rem;
+  padding: 6px 8px;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* small screen adjustments */
+@media (max-width: 640px) {
+  .products-controls {
+    padding: 10px;
+    gap: 6px;
+  }
+  .products-controls #products-search { flex-basis: 100%; }
+  .products-controls button#products-prev,
+  .products-controls button#products-next {
+    min-width: 40px; height: 40px; padding: 8px;
+  }
+  .products-controls #products-pagination { min-width: 64px; font-size: .9rem; }
+}
+
+/* RTL support */
+html[dir="rtl"] .products-controls {
+  direction: rtl;
+}
+html[dir="rtl"] .products-controls button#products-prev { transform: scaleX(-1); } /* optional flip */
+
+
+/* =========================
+  End of index.css — Enhanced UI/UX
+  ========================= */

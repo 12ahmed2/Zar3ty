@@ -25,8 +25,14 @@
       <p data-translate="index.aboutUsContent"></p>
     </section>
 
-    <section>
+    <section class="products-section">
       <h1 class="section-title" data-translate="index.productsTitle"></h1>
+      <div class="products-controls">
+        <input type="text" id="products-search" placeholder="Search products..."  />
+        <button id="products-prev">←</button>
+        <button id="products-next">→</button>
+        <span id="products-pagination"></span>
+      </div>
       <div id="grid-products" class="grid"></div>
     </section>
   </main>

@@ -69,15 +69,33 @@ let productsById = new Map();
 function fmtMoney(cents) { return `$${(Number(cents || 0) / 100).toFixed(2)}`; }
 function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
-/* PRODUCTS */
+/* PRODUCTS with search + pagination */
+let currentPage = 0;
+const PRODUCTS_PER_PAGE = 9;
+let filteredProducts = [];
+
 async function loadProducts() {
   productsCache = await api('/api/products').catch(() => []);
   productsById = new Map((productsCache || []).map(p => [Number(p.id), p]));
   refreshEls();
   if (!els.grid) return;
 
+  // default: all products
+  filteredProducts = [...productsCache];
+  currentPage = 0;
+  await renderProductPage();
+}
+
+async function renderProductPage() {
+  refreshEls();
+  if (!els.grid) return;
+
+  const start = currentPage * PRODUCTS_PER_PAGE;
+  const end = start + PRODUCTS_PER_PAGE;
+  const pageProducts = filteredProducts.slice(start, end);
+
   // process each product asynchronously
-  const productCards = await Promise.all((productsCache || []).map(async p => {
+  const productCards = await Promise.all(pageProducts.map(async p => {
     const price = fmtMoney(p.price_cents);
     const stockNum = (p.stock === null || p.stock === undefined) ? null : Number(p.stock);
     const soldOut = stockNum !== null && stockNum <= 0;
@@ -100,8 +118,8 @@ async function loadProducts() {
     return `
       <article class="card product">
         <img src="${p.image_url || '/static/img/placeholder.png'}" alt="">
-        <h4>${name}</h4>
-        <p class="muted">${description}</p>
+        <h4>${escapeHtml(name)}</h4>
+        <p class="muted">${escapeHtml(description || '')}</p>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <div><strong>${price}</strong><br/>${stockTxt}</div>
           <button class="btn sm" data-add="${p.id}" ${soldOut ? 'disabled' : ''} data-translate="${soldOut ? 'products.soldOut' : 'products.add'}"></button>
@@ -110,7 +128,78 @@ async function loadProducts() {
   }));
 
   els.grid.innerHTML = productCards.join('');
+
+  // update pagination display
+  const pages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const paginationEl = document.querySelector('#products-pagination');
+  if (paginationEl) {
+    paginationEl.textContent = pages > 0 ? `${currentPage + 1} / ${pages}` : '';
+  }
 }
+
+async function searchProducts(query) {
+  const q = query.trim().toLowerCase();
+
+  if (q === "") {
+    filteredProducts = [...productsCache];
+  } else {
+    // نخلي كل check async ونستنى كله بالـ Promise.all
+    const checks = await Promise.all(
+      productsCache.map(async (p) => {
+        const langDetected = detectLanguage(p.name);
+
+        let nameToSearch = p.name;
+        if (langDetected !== LANG) {
+          try {
+            nameToSearch = await translate(p.name, langDetected, LANG);
+          } catch (err) {
+            console.error("Translation error:", err);
+          }
+        }
+
+        return {
+          product: p,
+          match: nameToSearch.toLowerCase().includes(q)
+        };
+      })
+    );
+
+    // ناخد بس المنتجات اللي الـ match بتاعها true
+    filteredProducts = checks.filter(c => c.match).map(c => c.product);
+  }
+
+  currentPage = 0;
+  renderProductPage();
+}
+
+
+
+function nextProductPage() {
+  const pages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  if (pages === 0) return;
+  currentPage = (currentPage + 1) % pages;
+  renderProductPage();
+}
+
+function prevProductPage() {
+  const pages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  if (pages === 0) return;
+  currentPage = (currentPage - 1 + pages) % pages;
+  renderProductPage();
+}
+
+/* Hook up search + nav buttons */
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.querySelector('#products-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => searchProducts(e.target.value));
+  }
+
+  const nextBtn = document.querySelector('#products-next');
+  const prevBtn = document.querySelector('#products-prev');
+  if (nextBtn) nextBtn.addEventListener('click', nextProductPage);
+  if (prevBtn) prevBtn.addEventListener('click', prevProductPage);
+});
 
 /* localStorage guest mirror */
 function lsGetGuest() {
