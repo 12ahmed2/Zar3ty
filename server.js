@@ -5,6 +5,7 @@ import fs from 'fs';
 import cookieParser from 'cookie-parser';
 import bcrypt from 'bcrypt';
 import ms from 'ms';
+import nodemailer from "nodemailer";
 import compression from 'compression';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
