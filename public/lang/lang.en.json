@@ -47,6 +47,42 @@
   },
   "bot": {
     "title": "Smart Assistant"
+  },"article": {
+    "title": "🌱✨ Agricultural Tourism",
+    "intro": "A modern type of tourism focused on agricultural and rural activities, combining recreation, education, and hands-on experiences on farms or in rural areas. Agricultural tourism supports local economies, creates jobs, connects visitors with nature, and promotes environmental and social awareness.",
+    "features_heading": "✨ Key features of agricultural tourism:",
+    "features": {
+      "f1": "Farm visits: Learn farming methods, harvesting, and animal husbandry.",
+      "f2": "Farm stays: Stay in simple rural homes and experience daily farm life.",
+      "f3": "Hands-on experiences: Participate in olive picking, grape harvesting, vegetable planting, or rice harvesting.",
+      "f4": "Traditional food: Taste fresh farm-to-table rural dishes.",
+      "f5": "Recreational activities: Horse riding, cycling through fields, rural safaris.",
+      "f6": "Environmental education: Workshops on organic farming, recycling, and water conservation.",
+      "f7": "Local products: Buy natural products like honey, cheese, herbs, olives, and preserves."
+    },
+    "world_heading": "🌍 Agricultural tourism worldwide",
+    "world": {
+      "eu": "Europe: Italy (Agriturismo — farm stays), France (vineyards & cheese regions), Spain (olive/orange farms), Netherlands (flower farms).",
+      "asia": "Asia: India (tea estates like Darjeeling and Assam), Japan (rice & seasonal fruit farming), China (tea & rice villages).",
+      "americas": "Americas: USA (farm trips, pumpkin harvests), Brazil (coffee & cocoa farms), Argentina (vineyards & gaucho experiences).",
+      "africa": "Africa: Morocco (olive & date farms, argan oil), South Africa (vineyards often combined with safaris)."
+    },
+    "egypt_heading": "🌿 Agricultural tourism in Egypt",
+    "egypt": {
+      "p1": "Nile Valley & Delta: Olive, grape and vegetable farms (e.g., Fayoum, Monufia, Kafr El Sheikh).",
+      "p2": "Upper Egypt: Sugarcane and mango farms (Luxor, Aswan).",
+      "p3": "Oases & Siwa: Palm and olive farms and traditional natural products.",
+      "p4": "Sinai: Olive and medicinal/aromatic plants.",
+      "p5": "National projects: Toshka, East El Oweinat — opportunities for educational farm tourism."
+    },
+    "benefits_heading": "🎯 Benefits of agricultural tourism:",
+    "benefits": {
+      "b1": "Economic: Increase income for farmers and rural communities.",
+      "b2": "Social: Strengthen ties between urban and rural populations.",
+      "b3": "Environmental: Preserve natural resources and promote organic farming.",
+      "b4": "Educational: Teach children and youth about food sources and the importance of agriculture."
+    },
+    "summary": "Agricultural tourism worldwide reflects a diversity of farming cultures — from European vineyards to Asian tea and rice farms, and from American coffee and cocoa plantations to African olive and date groves. Egypt has strong potential thanks to its varied resources and the ability to blend historical heritage with rural experiences."
   },
   "gradients": {
     "status":" Status",

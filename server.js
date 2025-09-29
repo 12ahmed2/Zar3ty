@@ -114,6 +114,7 @@ app.use('/static', express.static(PUBLIC));
 app.get('/',        (_req, res) => res.sendFile(path.join(PUBLIC, 'html', 'index.html')));
 app.get('/login',   (_req, res) => res.sendFile(path.join(PUBLIC, 'html', 'index.html')));
 app.get('/bot',   (_req, res) => res.sendFile(path.join(PUBLIC, 'html', 'bot.html')));
+app.get('/agritourism',   (_req, res) => res.sendFile(path.join(PUBLIC, 'html', 'agritourism.html')));
 app.get('/signup',  (_req, res) => res.sendFile(path.join(PUBLIC, 'html', 'index.html')));
 app.get('/profile', requireAuth, async (req, res) => {
   try {

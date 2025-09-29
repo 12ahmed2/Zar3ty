@@ -1,0 +1,95 @@
+/* ===============================
+   agritourism.css
+   =============================== */
+
+/* Base setup */
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  background: var(--card);
+  color: #222;
+  line-height: 1.6;
+}
+
+
+/* Article container */
+#article.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  max-width: 900px;
+  margin: 70px auto;
+  border: 1.5px solid var(--border);
+}
+
+/* Title */
+#article-title {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  color: var(--brand-2);
+  font-weight: 700;
+}
+
+/* Intro */
+#article-intro {
+  font-size: 1.15rem;
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+
+/* Section headings */
+#article h3 {
+  font-size: 1.3rem;
+  margin: 24px 0 12px;
+  color: var(--brand-2);
+  border-left: 4px solid var(--brand-2);
+  padding-left: 10px;
+  font-weight: 700;
+}
+
+/* Lists */
+#article ul {
+  margin: 0 0 20px 20px;
+  padding: 0;
+  list-style: disc;
+}
+
+#article li {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  border: 1.2px solid var(--border);
+  transition: background 0.2s, transform 0.1s;
+}
+
+#article li:hover {
+  background: #f4f6ff;
+  transform: translateX(4px);
+}
+
+/* Paragraphs */
+#article p {
+  margin-bottom: 14px;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Summary */
+#article p[data-translate="article.summary"] {
+  background: #f4f6ff;
+  border-left: 4px solid var(--brand-2);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  color: #111;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  body { padding: 10px; }
+  #article.card { padding: 16px; }
+  #article-title { font-size: 1.6rem; }
+  #article h3 { font-size: 1.15rem; }
+}
