@@ -1,6 +1,11 @@
 // public/js/profile.js
 // public/js/profile.js
 
+import {detectLanguage,translate} from './translate.js'
+
+
+
+const LANG = document.documentElement.lang || 'en';
 /* -------------------- Fingerprint + API helper -------------------- */
 const FP_KEY = 'client_fp';
 function getFP(){ let v=localStorage.getItem(FP_KEY);
@@ -70,37 +75,49 @@ async function loadOrders() {
 
   if (!orders.length) {
     if (els.ordersList) els.ordersList.innerHTML = '';
-    if (els.ordersMsg)  els.ordersMsg.textContent = 'No active orders.';
+    if (els.ordersMsg)  els.ordersMsg.textContent = detectLanguage('No active orders.') === LANG ? 'No active orders.' : await translate('No active orders.', detectLanguage('No active orders.'), LANG);
     return;
   }
+
   if (els.ordersMsg) els.ordersMsg.textContent = '';
   if (els.ordersList) {
-    els.ordersList.innerHTML = orders.map(o => {
+    const ordersHtml = await Promise.all(orders.map(async o => {
       const total = (o.total_cents / 100).toFixed(2);
-      const items = (o.items || []).map(it =>
-        `<li><strong>${it.name || ('#' + it.product_id)}</strong> × ${it.qty} · $${(it.price_cents / 100).toFixed(2)}</li>`
-      ).join('');
+
+      // Translate each item name
+      const itemsHtml = await Promise.all((o.items || []).map(async it => {
+        const name = detectLanguage(it.name) === LANG? it.name: await translate(it.name, detectLanguage(it.name), LANG);
+        return `<li><strong>${name || ('#' + it.product_id)}</strong> × ${it.qty} · $${(it.price_cents / 100).toFixed(2)}</li>`;
+      }));
+
       const canCancel = o.status === 'created';
+      const status = detectLanguage(o.status) === LANG
+        ? o.status
+        : await translate(o.status, detectLanguage(o.status), LANG);
       const when = o.created_at ? new Date(o.created_at).toLocaleString() : '';
+
       return `
         <article class="card">
           <div class="row">
-            <div><strong>Order #${o.id}</strong></div>
+            <div><strong><strong data-translate="gradients.order"></strong> ${o.id}</strong></div>
             <div class="muted">${when}</div>
           </div>
-          <p>Status: <strong>${o.status}</strong></p>
-          <ul>${items}</ul>
+          <p><strong data-translate="gradients.status"></strong>: <strong>${status}</strong></p>
+          <ul>${itemsHtml.join('')}</ul>
           <div class="row">
-            <div><strong>Total: $${total}</strong></div>
+            <div><strong><strong data-translate="gradients.total"></strong>: $${total}</strong></div>
             <div class="hstack gap">
               ${canCancel ? `<button class="btn sm" data-cancel="${o.id}" data-translate="gradients.cancel"></button>` : ''}
-              <button class="btn ghost sm" data-refresh="${o.id}" data-translate="gradients.refresh">Refresh</button>
+              <button class="btn ghost sm" data-refresh="${o.id}" data-translate="gradients.refresh"></button>
             </div>
           </div>
         </article>`;
-    }).join('');
+    }));
+
+    els.ordersList.innerHTML = ordersHtml.join('');
   }
 }
+
 
 /* ------------------------- Event bindings ------------------------- */
 els.ordersList?.addEventListener('click', async (e) => {
@@ -144,33 +161,40 @@ async function fetchMyEnrollments() {
   return res.json(); // [{ course_id, enrolled_at, meta, title, image_url }, ...]
 }
 
-function renderMyEnrollments(list) {
+async function renderMyEnrollments(list) {
   const el = document.getElementById('my-enrollments');
   if (!el) return;
+
   if (!list.length) {
-    el.innerHTML = `<div class="muted">You have no enrollments.</div>`;
+    el.innerHTML = `<div class="muted">${detectLanguage('You have no enrollments.') === LANG? 'You have no enrollments.': await translate('You have no enrollments.', detectLanguage('You have no enrollments.'), LANG)}</div>`;
     return;
   }
 
-  el.innerHTML = list.map(item => `
-    <div class="enroll-card" data-course-id="${item.course_id}">
-      <img src="${item.image_url || 'https://via.placeholder.com/300x180'}" alt="">
-      <div class="content">
-        <div class="title">${item.title || 'Untitled'}</div>
-        <div class="muted">Enrolled: ${new Date(item.enrolled_at).toLocaleString()}</div>
-        <div class="actions">
-          <a class="btn" href="/course/${item.course_id}" data-translate="gradients.open">Open</a>
-          <button class="btn danger unenroll-btn" data-course-id="${item.course_id}" data-translate="courses.unenroll">Unenroll</button>
+  // Map items asynchronously to include translations
+  const cardsHtml = await Promise.all(list.map(async item => {
+    const title = detectLanguage(item.title || 'Untitled') === LANG ? item.title : await translate(item.title || 'Untitled', detectLanguage(item.title || 'Untitled'), LANG);
+    return `
+      <div class="enroll-card" data-course-id="${item.course_id}">
+        <img src="${item.image_url || 'https://via.placeholder.com/300x180'}" alt="">
+        <div class="content">
+          <div class="title">${title}</div>
+          <div class="muted"><label data-translate="courses.enrolled"></label>: ${new Date(item.enrolled_at).toLocaleString()}</div>
+          <div class="actions">
+            <a class="btn" href="/course/${item.course_id}" data-translate="gradients.open"></a>
+            <button class="btn danger unenroll-btn" data-course-id="${item.course_id}" data-translate="courses.unenroll"></button>
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }));
 
-  // attach handlers
+  el.innerHTML = cardsHtml.join('');
+
+  // Attach handlers for unenroll buttons
   el.querySelectorAll('.unenroll-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const courseId = e.currentTarget.dataset.courseId;
-      if (!confirm('Unenroll from this course?')) return;
+      if (!confirm(detectLanguage('Unenroll from this course?') === LANG? 'Unenroll from this course?': await translate('Unenroll from this course?', detectLanguage('Unenroll from this course?'), LANG))) return;
       try {
         const res = await fetch(`/api/courses/${courseId}/enroll`, {
           method: 'DELETE',
@@ -180,18 +204,20 @@ function renderMyEnrollments(list) {
           const data = await res.json().catch(()=>({ error: res.statusText }));
           throw new Error(data.error || res.statusText);
         }
-        // remove card from DOM
+        // Remove card from DOM
         const card = document.querySelector(`.enroll-card[data-course-id="${courseId}"]`);
         if (card) card.remove();
-        // optional: show message if list empty now
-        if (!el.querySelectorAll('.enroll-card').length) el.innerHTML = `<div class="muted">You have no enrollments.</div>`;
+        if (!el.querySelectorAll('.enroll-card').length) {
+          el.innerHTML = `<div class="muted">${detectLanguage('You have no enrollments.') === LANG? 'You have no enrollments.': await translate('You have no enrollments.', detectLanguage('You have no enrollments.'), LANG)}</div>`;
+        }
       } catch (err) {
         console.error('Unenroll failed', err);
-        alert('Failed to unenroll. See console.');
+        alert(detectLanguage('Failed to unenroll. See console.') === LANG? 'Failed to unenroll. See console.': await translate('Failed to unenroll. See console.', detectLanguage('Failed to unenroll. See console.'), LANG));
       }
     });
   });
 }
+
 
 
 /* ------------------------------ Boot ------------------------------ */

@@ -49,6 +49,10 @@
     "title": "Smart Assistant"
   },
   "gradients": {
+    "status":" Status",
+    "date":" Date",
+    "order": "Order",
+    "orders": "Orders",
     "savechange": "Save changes",
     "cancel": "Cancel",
     "profile": "Profile",
