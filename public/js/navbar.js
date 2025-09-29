@@ -37,6 +37,7 @@
       <a href="/#products" class="nav-link${active === 'products' ? ' active' : ''}" data-translate="navbar.products"></a>
       <a href="/courses" class="nav-link${active === 'courses' ? ' active' : ''}" data-translate="navbar.courses"></a>
       <a href="/bot" class="nav-link${active === 'bot' ? ' active' : ''}" data-translate="navbar.bot"></a>
+      <a href="/agritourism" class="nav-link${active === 'agritourism' ? ' active' : ''}" data-translate="navbar.agritourism"></a>
     `;
 
     const rightLinks = me ? `
@@ -61,7 +62,7 @@
     nav.innerHTML = `
       <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
       <div class="nav-inner">
-        <a href="/" class="nav-logo" data-translate="navbar.title">PG Market</a>
+        <a href="/" class="nav-logo" data-translate="navbar.title">Zar3ty</a>
         <div class="nav-links" id="mobile-nav-links">
           <div class="left-links">${leftLinks}</div>
           <div class="right-links">${rightLinks}</div>
@@ -182,6 +183,7 @@
     if (p.startsWith('/bot')) return 'bot';
     if (h === '#products') return 'products';
     if (h === '#about-us') return 'about-us';
+    if (p.startsWith('/agritourism') ) return 'agritourism';
     return 'home';
   }
 
