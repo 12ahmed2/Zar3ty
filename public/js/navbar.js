@@ -32,9 +32,11 @@
     `;
 
     const leftLinks = `
-      <a href="/" class="nav-link${active === 'home' ? ' active' : ''}" data-translate="navbar.home">Home</a>
-      <a href="/courses" class="nav-link${active === 'courses' ? ' active' : ''}" data-translate="navbar.courses">Courses</a>
-      <a href="/bot" class="nav-link${active === 'bot' ? ' active' : ''}" data-translate="navbar.bot">Bot</a>
+      <a href="/" class="nav-link${active === 'home' ? ' active' : ''}" data-translate="navbar.home"></a>
+      <a href="/#about-us" class="nav-link${active === 'about-us' ? ' active' : ''}" data-translate="navbar.aboutUs"></a>
+      <a href="/#products" class="nav-link${active === 'products' ? ' active' : ''}" data-translate="navbar.products"></a>
+      <a href="/courses" class="nav-link${active === 'courses' ? ' active' : ''}" data-translate="navbar.courses"></a>
+      <a href="/bot" class="nav-link${active === 'bot' ? ' active' : ''}" data-translate="navbar.bot"></a>
     `;
 
     const rightLinks = me ? `
@@ -174,9 +176,12 @@
 
   function detectActive() {
     const p = location.pathname;
+    const h = location.hash;
     if (p.startsWith('/courses')) return 'courses';
     if (p.startsWith('/profile')) return 'profile';
     if (p.startsWith('/bot')) return 'bot';
+    if (h === '#products') return 'products';
+    if (h === '#about-us') return 'about-us';
     return 'home';
   }
 
@@ -189,6 +194,9 @@
     wireNavbar(nav);
     if (typeof window.updateCartBadge === 'function') window.updateCartBadge().catch(() => {});
   }
+  window.addEventListener('hashchange', () => {
+  renderIntoPlaceholder(); // will re-detect active
+});
 
   async function refreshAuthUI() {
     try {
