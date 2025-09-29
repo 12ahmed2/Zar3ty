@@ -321,7 +321,7 @@ async function renderCourse(course, me) {
       translateKey: 'navbar.login',    // if you use translations; otherwise fallback text used
       textFallback: 'Log in',
       pressed: false,
-      onClick: () => { window.location.href = '/login'; }
+      onClick: () => { document.getElementById('dlg-login')?.showModal();}
     });
 
     return;
