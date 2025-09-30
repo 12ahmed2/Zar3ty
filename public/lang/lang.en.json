@@ -95,7 +95,8 @@
     "profile": "Profile",
     "mycourses": "My Courses",
     "open":"Open",
-    "myorders": "My Orders"
+    "myorders": "My Orders",
+    "refresh":"Refresh"
   },
   "auth": {
     "login": {

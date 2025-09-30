@@ -41,12 +41,12 @@
     `;
 
     const rightLinks = me ? `
+      <a href="/profile" class="nav-link${active === 'profile' ? ' active' : ''}">
+        <span class="user-avatar">${userInitials}</span>
+      </a>
       <button id="btn-open-cart" class="nav-link icon" aria-label="Open cart">
         <span data-translate="navbar.cart">Cart</span> <span id="cart-count" class="badge">0</span>
       </button>
-      <a href="/profile" class="nav-link${active === 'profile' ? ' active' : ''}">
-        <span class="user-avatar">${userInitials}</span> ${escapeHtml(username)}
-      </a>
       <button id="navbar-logout" class="nav-link" type="button" data-translate="navbar.logout">Logout</button>
       ${langSelector}
     ` : `
