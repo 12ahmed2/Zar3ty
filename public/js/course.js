@@ -93,7 +93,7 @@ async function downloadCertificate(me,courseId) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.setTextColor(34, 139, 34);
-    doc.text("Temple of Trades Academy", pageWidth/2, 420, { align: "center" });
+    doc.text("Zar3ty Academy", pageWidth/2, 420, { align: "center" });
 
     // Save
     doc.save(`${me.fullname|| "user"}_${course.title || "course"}_certificate.pdf`);
