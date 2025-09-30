@@ -26,30 +26,39 @@ window.loadLanguage = async function (lang) {
   }
 };
 
-// Apply translation to every element with [data-translate]
+// Apply translation to elements
 function translatePage(data) {
+  // For normal text
   document.querySelectorAll('[data-translate]').forEach(el => {
     const key = el.getAttribute('data-translate');
     const val = key.split('.').reduce((o, k) => (o || {})[k], data);
     if (val) el.textContent = val;
+  });
+
+  // For placeholders (inputs, textareas, etc.)
+  document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-translate-placeholder');
+    const val = key.split('.').reduce((o, k) => (o || {})[k], data);
+    if (val) el.setAttribute('placeholder', val);
   });
 }
 
 // Observe DOM changes so translations apply automatically
 const observer = new MutationObserver(mutations => {
   mutations.forEach(mutation => {
-    if (mutation.type === 'attributes' && mutation.attributeName === 'data-translate') {
+    if (
+      mutation.type === 'attributes' && 
+      (mutation.attributeName === 'data-translate' || mutation.attributeName === 'data-translate-placeholder')
+    ) {
       // Attribute changed → retranslate
       translatePage(window.currentLangData || {});
     } else if (mutation.type === 'childList') {
       mutation.addedNodes.forEach(node => {
         if (node.nodeType === 1) {
-          // If the added node has data-translate
-          if (node.hasAttribute && node.hasAttribute('data-translate')) {
+          if (node.hasAttribute && (node.hasAttribute('data-translate') || node.hasAttribute('data-translate-placeholder'))) {
             translatePage(window.currentLangData || {});
           } else if (node.querySelectorAll) {
-            // Or if any child has data-translate
-            if (node.querySelectorAll('[data-translate]').length > 0) {
+            if (node.querySelectorAll('[data-translate], [data-translate-placeholder]').length > 0) {
               translatePage(window.currentLangData || {});
             }
           }
@@ -69,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['data-translate']
+    attributeFilter: ['data-translate', 'data-translate-placeholder']
   });
 
   // Handle <select id="lang-switcher">
@@ -83,5 +92,4 @@ document.addEventListener('DOMContentLoaded', () => {
       window.loadLanguage(e.target.value);
     });
   }
-
 });
