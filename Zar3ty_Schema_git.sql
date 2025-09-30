@@ -154,6 +154,21 @@ CREATE TABLE public.courses (
 
 ALTER TABLE public.courses OWNER TO postgres;
 
+---
+--- Name: pending_users; Type: TABLE; Schema: public; Owner: postgres
+---
+CREATE TABLE pending_users (
+    email TEXT PRIMARY KEY,
+    fullname TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    otp_hash TEXT NOT NULL,
+    attempts INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL
+);
+
+ALTER TABLE pending_users OWNER TO postgres;
+
 --
 -- Name: courses_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
