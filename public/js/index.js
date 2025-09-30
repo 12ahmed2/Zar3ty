@@ -117,7 +117,7 @@ async function renderProductPage() {
 
     return `
       <article class="card product">
-        <img src="${p.image_url || '/static/img/placeholder.png'}" alt="">
+        <img class="cart-placeholder-image" src="${p.image_url || (LANG === 'ar' ? '/static/static/img/placeholder-ar.png' : '/static/static/img/placeholder.png')}" alt="">
         <h4>${escapeHtml(name)}</h4>
         <p class="muted">${escapeHtml(description || '')}</p>
         <div class="row" style="justify-content:space-between;align-items:center;">
@@ -343,7 +343,7 @@ async function renderCart() {
 
       return `
       <div class="cart-item" data-cart-id="${it.id ?? ''}">
-        <img src="${it.image_url || '/static/img/placeholder.png'}" alt="">
+        <img class="cart-placeholder-image" src="${it.image_url || (LANG === 'ar' ? '/static/static/img/placeholder-ar.png' : '/static/static/img/placeholder.png')}" alt="">
         <div class="grow">
           <div>${escapeHtml(translatedName)}</div>
           <div class="muted">x${it.qty}</div>

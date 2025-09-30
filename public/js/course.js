@@ -279,7 +279,7 @@ async function renderCourse(course, me) {
   // update header info
   el.title.textContent = detectLanguage(course.title) === LANG? course.title: await translate(course.title, detectLanguage(course.title), LANG)|| 'Untitled course';
   el.desc.textContent = detectLanguage(course.description) === LANG? course.description: await translate(course.description, detectLanguage(course.description), LANG)|| '';
-  el.img.src = course.image_url || '/static/img/placeholder-course.png';
+  el.img.src = course.image_url || (LANG === 'ar' ? '/static/static/img/placeholder-ar.png' : '/static/static/img/placeholder.png');
 
   // remove any old module content / players
   clearNode(el.modulesList);

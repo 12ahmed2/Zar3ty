@@ -151,7 +151,11 @@ button {
   color: var(--brand-2); 
   transform: translateY(-1px); 
 }
-
+.cart-placeholder-image{
+  object-fit: cover; 
+  border-radius: 8px; 
+  flex-shrink: 0; 
+}
 .nav-link.active { 
   background: rgba(29,78,216,0.12); 
   color: var(--brand-2); 

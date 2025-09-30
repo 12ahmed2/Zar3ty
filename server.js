@@ -70,10 +70,8 @@ app.use(
           "'self'",
           "data:",
           "blob:",
-          "https://*.ytimg.com",
-          "https://*.youtube.com",
-          "https://upload.wikimedia.org",
-          "https:"
+          "https:",
+          "http:"
         ],
         styleSrc: ["'self'", "'unsafe-inline'"],
         workerSrc: ["'self'", "blob:", "https://run.aicado.ai"],

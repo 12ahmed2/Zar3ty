@@ -46,7 +46,7 @@ async function renderCourses(list, enrolledSet = new Set()) {
 
     return `
       <div class="course-card">
-        <img src="${c.image_url || 'https://via.placeholder.com/600x400'}" alt="${title}">
+        <img src="${c.image_url || (LANG === 'ar' ? '/static/static/img/placeholder-ar.png' : '/static/static/img/placeholder.png')}" alt="${title}">
         <div class="course-content">
           <div class="course-title">${title}</div>
           <div class="course-desc">${description || ''}</div>
