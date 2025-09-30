@@ -1176,6 +1176,23 @@ html[dir="rtl"] .products-controls {
 }
 html[dir="rtl"] .products-controls button#products-prev { transform: scaleX(-1); } /* optional flip */
 
+/* Default LTR */
+#products-prev::before {
+  content: "←";
+}
+#products-next::before {
+  content: "→";
+}
+
+/* RTL override */
+html[dir="rtl"] #products-prev::before {
+  content: "→";
+}
+html[dir="rtl"] #products-next::before {
+  content: "→";
+}
+
+
 
 /* =========================
   End of index.css — Enhanced UI/UX
